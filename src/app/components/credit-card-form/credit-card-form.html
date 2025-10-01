@@ -1,0 +1,111 @@
+<div class="card w-full max-w-md mx-auto">
+  <div class="card-header text-center">
+    <div class="flex justify-center mb-2">
+      <div class="payment-icon credit-card-icon"></div>
+    </div>
+    <h2 class="card-title">Pagamento com Cartão</h2>
+    <p class="card-description">
+      Valor: {{ paymentService.formatCurrency(transaction.amount, transaction.currency) }}
+    </p>
+  </div>
+  
+  <div class="card-content">
+    <form (ngSubmit)="onSubmit()" class="space-y-4">
+      <!-- Número do Cartão -->
+      <div class="space-y-2">
+        <label for="cardNumber" class="label">Número do Cartão</label>
+        <input
+          id="cardNumber"
+          type="text"
+          placeholder="1234 5678 9012 3456"
+          [value]="formData.cardNumber"
+          (input)="onInputChange('cardNumber', $any($event.target).value)"
+          maxlength="23"
+          [class]="'input ' + (errors['cardNumber'] ? 'border-error' : '')"
+        />
+        <p *ngIf="errors['cardNumber']" class="error-text">{{ errors['cardNumber'] }}</p>
+      </div>
+
+      <!-- Nome do Titular -->
+      <div class="space-y-2">
+        <label for="cardHolderName" class="label">Nome do Titular</label>
+        <input
+          id="cardHolderName"
+          type="text"
+          placeholder="NOME COMO NO CARTÃO"
+          [value]="formData.cardHolderName"
+          (input)="onInputChange('cardHolderName', $any($event.target).value)"
+          [class]="'input ' + (errors['cardHolderName'] ? 'border-error' : '')"
+        />
+        <p *ngIf="errors['cardHolderName']" class="error-text">{{ errors['cardHolderName'] }}</p>
+      </div>
+
+      <!-- Validade -->
+      <div class="grid grid-cols-2 gap-4">
+        <div class="space-y-2">
+          <label for="expirationMonth" class="label">Mês</label>
+          <input
+            id="expirationMonth"
+            type="number"
+            placeholder="MM"
+            min="1"
+            max="12"
+            [value]="formData.expirationMonth"
+            (input)="onInputChange('expirationMonth', $any($event.target).value)"
+            [class]="'input ' + (errors['expirationMonth'] ? 'border-error' : '')"
+          />
+          <p *ngIf="errors['expirationMonth']" class="error-text">{{ errors['expirationMonth'] }}</p>
+        </div>
+        
+        <div class="space-y-2">
+          <label for="expirationYear" class="label">Ano</label>
+          <input
+            id="expirationYear"
+            type="number"
+            placeholder="AAAA"
+            [min]="currentYear"
+            [max]="currentYear + 20"
+            [value]="formData.expirationYear"
+            (input)="onInputChange('expirationYear', $any($event.target).value)"
+            [class]="'input ' + (errors['expirationYear'] ? 'border-error' : '')"
+          />
+          <p *ngIf="errors['expirationYear']" class="error-text">{{ errors['expirationYear'] }}</p>
+        </div>
+      </div>
+
+      <div *ngIf="errors['expirationDate']" class="alert alert-error">
+        <div class="alert-icon"></div>
+        <p>{{ errors['expirationDate'] }}</p>
+      </div>
+
+      <!-- CVV -->
+      <div class="space-y-2">
+        <label for="cvv" class="label">CVV</label>
+        <input
+          id="cvv"
+          type="password"
+          placeholder="123"
+          maxlength="4"
+          [value]="formData.cvv"
+          (input)="onInputChange('cvv', $any($event.target).value)"
+          [class]="'input ' + (errors['cvv'] ? 'border-error' : '')"
+        />
+        <p *ngIf="errors['cvv']" class="error-text">{{ errors['cvv'] }}</p>
+      </div>
+
+      <!-- Informação de Segurança -->
+      <div class="flex items-center gap-2 text-sm text-muted-foreground">
+        <div class="security-icon"></div>
+        <span>Seus dados estão protegidos com criptografia SSL</span>
+      </div>
+
+      <!-- Botão de Pagamento -->
+      <button 
+        type="submit" 
+        class="btn-primary w-full" 
+        [disabled]="isLoading">
+        {{ isLoading ? 'Processando...' : 'Pagar Agora' }}
+      </button>
+    </form>
+  </div>
+</div>

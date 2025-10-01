@@ -1,0 +1,53 @@
+<div class="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+  <div class="card w-full max-w-md">
+    <div class="card-header text-center">
+      <h1 class="card-title text-2xl">Sistema de Pagamentos</h1>
+      <p class="card-description">
+        Plataforma segura para processamento de pagamentos
+      </p>
+    </div>
+    
+    <div class="card-content space-y-6">
+      <div class="grid gap-4">
+        <div class="flex items-center gap-3 p-4 border rounded-lg">
+          <div class="payment-icon credit-card-icon"></div>
+          <div>
+            <div class="font-semibold">Cartão de Crédito</div>
+            <div class="text-sm text-muted-foreground">
+              Processamento seguro com validação em tempo real
+            </div>
+          </div>
+        </div>
+        
+        <div class="flex items-center gap-3 p-4 border rounded-lg">
+          <div class="payment-icon qr-code-icon"></div>
+          <div>
+            <div class="font-semibold">PIX</div>
+            <div class="text-sm text-muted-foreground">
+              Pagamento instantâneo com QR Code
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="text-center text-sm text-muted-foreground">
+        <p>Para iniciar um pagamento, você será redirecionado</p>
+        <p>de uma loja parceira com um link específico.</p>
+      </div>
+      
+      <div class="grid gap-3">
+        <button 
+          class="btn-primary w-full" 
+          (click)="openDemoStore()">
+          Acessar Loja Demo
+        </button>
+        
+        <button 
+          class="btn-secondary w-full" 
+          (click)="openAuth()">
+          Entrar / Cadastrar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

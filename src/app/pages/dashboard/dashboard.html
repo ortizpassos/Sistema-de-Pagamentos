@@ -1,0 +1,99 @@
+<div class="dashboard-container">
+  <header class="dashboard-header">
+    <h1>Minha Conta</h1>
+    <button type="button" class="btn-logout">Sair</button>
+  </header>
+
+  <div class="dashboard-content">
+    <div class="dashboard-grid">
+      <!-- Informações do Usuário -->
+      <div class="dashboard-card">
+        <h2>Perfil</h2>
+        <div class="user-info">
+          <div class="user-avatar">
+            <span>JD</span>
+          </div>
+          <div class="user-details">
+            <h3>João da Silva</h3>
+            <p>joao@email.com</p>
+            <p>(11) 99999-9999</p>
+          </div>
+        </div>
+        <button type="button" class="btn-secondary">Editar Perfil</button>
+      </div>
+
+      <!-- Cartões Salvos -->
+      <div class="dashboard-card">
+        <h2>Cartões Salvos</h2>
+        <div class="saved-cards">
+          <div class="card-item">
+            <div class="card-info">
+              <span class="card-brand">Visa</span>
+              <span class="card-number">•••• •••• •••• 1234</span>
+            </div>
+            <button type="button" class="btn-remove">Remover</button>
+          </div>
+          <div class="card-item">
+            <div class="card-info">
+              <span class="card-brand">Mastercard</span>
+              <span class="card-number">•••• •••• •••• 5678</span>
+            </div>
+            <button type="button" class="btn-remove">Remover</button>
+          </div>
+        </div>
+        <button type="button" class="btn-secondary">Adicionar Cartão</button>
+      </div>
+
+      <!-- Transações Recentes -->
+      <div class="dashboard-card full-width">
+        <h2>Transações Recentes</h2>
+        <div class="transactions-list">
+          <div class="transaction-item">
+            <div class="transaction-info">
+              <span class="transaction-description">Pagamento - Loja Online</span>
+              <span class="transaction-date">15/01/2024</span>
+            </div>
+            <span class="transaction-amount">R$ 159,90</span>
+            <span class="transaction-status success">Aprovado</span>
+          </div>
+          <div class="transaction-item">
+            <div class="transaction-info">
+              <span class="transaction-description">Transferência PIX</span>
+              <span class="transaction-date">14/01/2024</span>
+            </div>
+            <span class="transaction-amount">R$ 250,00</span>
+            <span class="transaction-status success">Aprovado</span>
+          </div>
+          <div class="transaction-item">
+            <div class="transaction-info">
+              <span class="transaction-description">Compra Online</span>
+              <span class="transaction-date">12/01/2024</span>
+            </div>
+            <span class="transaction-amount">R$ 89,50</span>
+            <span class="transaction-status pending">Processando</span>
+          </div>
+        </div>
+        <button type="button" class="btn-secondary">Ver Todas</button>
+      </div>
+
+      <!-- Ações Rápidas -->
+      <div class="dashboard-card">
+        <h2>Ações Rápidas</h2>
+        <div class="quick-actions">
+          <button type="button" class="quick-action-btn">
+            <span class="action-icon">💳</span>
+            <span>Novo Pagamento</span>
+          </button>
+          <button type="button" class="quick-action-btn">
+            <span class="action-icon">📊</span>
+            <span>Relatórios</span>
+          </button>
+          <button type="button" class="quick-action-btn">
+            <span class="action-icon">⚙️</span>
+            <span>Configurações</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,75 @@
+<div class="card w-full max-w-md mx-auto">
+  <div class="card-header text-center">
+    <div class="flex justify-center mb-2">
+      <div class="payment-icon pix-icon"></div>
+    </div>
+    <h2 class="card-title">Pagamento PIX</h2>
+    <p class="card-description">
+      Valor: {{ paymentService.formatCurrency(transaction.amount, transaction.currency) }}
+    </p>
+  </div>
+  
+  <div class="card-content">
+    <div *ngIf="isLoading" class="loading-container">
+      <div class="spinner"></div>
+      <p>Gerando código PIX...</p>
+    </div>
+
+    <div *ngIf="!isLoading && pixData" class="pix-content">
+      <!-- Countdown Timer -->
+      <div class="countdown-container">
+        <div class="countdown-circle">
+          <span class="countdown-time">{{ formatTime(timeRemaining) }}</span>
+        </div>
+        <p class="countdown-text">Tempo para pagamento</p>
+      </div>
+
+      <!-- QR Code -->
+      <div class="qr-code-container">
+        <img [src]="getQrCodeImage()" alt="QR Code PIX" class="qr-code" />
+        <p class="qr-code-instruction">
+          Aponte a câmera do seu celular para o QR Code
+        </p>
+      </div>
+
+      <!-- PIX Code -->
+      <div class="pix-code-container">
+        <label class="label">Código PIX (Copia e Cola)</label>
+        <div class="pix-code-input-group">
+          <input 
+            type="text" 
+            [value]="pixData.pixCode" 
+            readonly 
+            class="pix-code-input"
+          />
+          <button 
+            type="button" 
+            (click)="copyPixCode()" 
+            class="btn-copy">
+            Copiar
+          </button>
+        </div>
+        <p class="pix-code-instruction">
+          Ou copie e cole o código no seu app de banco
+        </p>
+      </div>
+
+      <!-- Instructions -->
+      <div class="instructions">
+        <h3 class="instructions-title">Como pagar:</h3>
+        <ol class="instructions-list">
+          <li>Abra o app do seu banco</li>
+          <li>Escaneie o QR Code ou cole o código PIX</li>
+          <li>Confirme os dados e finalize o pagamento</li>
+          <li>Aguarde a confirmação automática</li>
+        </ol>
+      </div>
+
+      <!-- Status -->
+      <div class="status-container">
+        <div class="status-icon checking"></div>
+        <p class="status-text">Aguardando pagamento...</p>
+      </div>
+    </div>
+  </div>
+</div>

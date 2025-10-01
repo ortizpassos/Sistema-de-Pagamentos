@@ -1,0 +1,123 @@
+<div class="payment-container">
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-wrapper">
+    <div class="payment-card">
+      <div class="payment-header">
+        <h1 class="payment-title">Sistema de Pagamentos</h1>
+        <p class="payment-subtitle">Carregando dados da transação...</p>
+      </div>
+      <div class="payment-content text-center">
+        <div class="spinner-large"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error && !isLoading" class="error-wrapper">
+    <div class="payment-card">
+      <div class="payment-header">
+        <h1 class="payment-title">Erro</h1>
+        <p class="payment-subtitle">Ocorreu um problema</p>
+      </div>
+      <div class="payment-content text-center">
+        <div class="alert alert-error">
+          <span class="icon icon-sm error-icon"></span>
+          {{ error }}
+        </div>
+        <button class="btn-primary w-full" (click)="goBack()">
+          Voltar ao Início
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Payment Result -->
+  <div *ngIf="showResult && !isLoading">
+    <app-payment-result 
+      [transaction]="paymentResult!" 
+      [isSuccess]="paymentResult?.status === 'APPROVED'"
+      [errorMessage]="resultError">
+    </app-payment-result>
+  </div>
+
+  <!-- Payment Forms -->
+  <div *ngIf="transaction && !showResult && !isLoading" class="payment-card">
+    <div class="payment-header">
+      <h1 class="payment-title">Finalizar Pagamento</h1>
+      <p class="payment-subtitle">Complete os dados para processar seu pagamento</p>
+    </div>
+
+    <!-- Transaction Summary -->
+    <div class="payment-content">
+      <div class="space-y-4">
+        <div class="grid gap-3">
+          <div class="flex items-center justify-between p-4 border rounded-lg">
+            <span class="text-sm text-muted-foreground">Valor Total:</span>
+            <span class="font-semibold">
+              {{ paymentService.formatCurrency(transaction.amount, transaction.currency) }}
+            </span>
+          </div>
+          <div class="flex items-center justify-between p-4 border rounded-lg">
+            <span class="text-sm text-muted-foreground">Pedido:</span>
+            <span class="font-semibold">#{{ transaction.orderId }}</span>
+          </div>
+          <div class="flex items-center justify-between p-4 border rounded-lg">
+            <span class="text-sm text-muted-foreground">Método:</span>
+            <span class="font-semibold">
+              {{ transaction.paymentMethod === 'credit_card' ? 'Cartão de Crédito' : 'PIX' }}
+            </span>
+          </div>
+        </div>
+
+    <!-- Payment Method Selection (if needed) -->
+    <div *ngIf="false" class="payment-method-selector">
+      <div class="method-options">
+        <button 
+          class="method-option"
+          [class.active]="transaction?.paymentMethod === 'credit_card'"
+          (click)="selectPaymentMethod('credit_card')">
+          <div class="method-icon credit-card-icon"></div>
+          <span>Cartão de Crédito</span>
+        </button>
+        
+        <button 
+          class="method-option"
+          [class.active]="transaction?.paymentMethod === 'pix'"
+          (click)="selectPaymentMethod('pix')">
+          <div class="method-icon pix-icon"></div>
+          <span>PIX</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Payment Forms -->
+    <div class="payment-forms">
+      <!-- Credit Card Form -->
+      <div *ngIf="transaction.paymentMethod === 'credit_card'">
+        <app-credit-card-form 
+          [transaction]="transaction"
+          (success)="onPaymentSuccess($event)"
+          (error)="onPaymentError($event)">
+        </app-credit-card-form>
+      </div>
+
+      <!-- PIX Payment -->
+      <div *ngIf="transaction.paymentMethod === 'pix'">
+        <app-pix-payment 
+          [transaction]="transaction"
+          (success)="onPaymentSuccess($event)"
+          (error)="onPaymentError($event)">
+        </app-pix-payment>
+      </div>
+    </div>
+
+    <!-- Security Notice -->
+    <div class="security-notice">
+      <div class="security-icon"></div>
+      <div class="security-text">
+        <p><strong>Suas informações estão protegidas</strong></p>
+        <p>Utilizamos criptografia SSL de 256 bits para garantir a segurança dos seus dados.</p>
+      </div>
+    </div>
+  </div>
+</div>

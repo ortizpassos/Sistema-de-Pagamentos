@@ -1,0 +1,102 @@
+<div class="result-container">
+  <div class="card w-full max-w-md mx-auto">
+    <div class="card-content text-center">
+      <!-- Status Icon -->
+      <div class="icon-container">
+        <div [class]="statusIconClass"></div>
+      </div>
+
+      <!-- Status Message -->
+      <h1 class="status-title">{{ statusMessage }}</h1>
+
+      <!-- Transaction Details -->
+      <div *ngIf="transaction" class="transaction-details">
+        <div class="detail-row">
+          <span class="detail-label">Valor:</span>
+          <span class="detail-value">
+            {{ paymentService.formatCurrency(transaction.amount, transaction.currency) }}
+          </span>
+        </div>
+
+        <div class="detail-row">
+          <span class="detail-label">Método:</span>
+          <span class="detail-value">{{ getPaymentMethodLabel() }}</span>
+        </div>
+
+        <div class="detail-row">
+          <span class="detail-label">ID da Transação:</span>
+          <span class="detail-value transaction-id">{{ transaction.id }}</span>
+        </div>
+
+        <div class="detail-row">
+          <span class="detail-label">Data:</span>
+          <span class="detail-value">{{ formatDate(transaction.createdAt) }}</span>
+        </div>
+
+        <div *ngIf="transaction.bankTransactionId" class="detail-row">
+          <span class="detail-label">ID do Banco:</span>
+          <span class="detail-value">{{ transaction.bankTransactionId }}</span>
+        </div>
+      </div>
+
+      <!-- Error Message -->
+      <div *ngIf="errorMessage && !transaction" class="error-message">
+        <div class="error-icon"></div>
+        <p>{{ errorMessage }}</p>
+      </div>
+
+      <!-- Status-specific content -->
+      <div *ngIf="isApproved" class="success-content">
+        <div class="success-message">
+          <p>Seu pagamento foi processado com sucesso!</p>
+          <p class="sub-message">Você receberá uma confirmação por e-mail.</p>
+        </div>
+      </div>
+
+      <div *ngIf="isDeclined || isFailed" class="error-content">
+        <div class="error-details">
+          <p>Não foi possível processar seu pagamento.</p>
+          <p class="sub-message">
+            Por favor, verifique os dados do cartão ou tente novamente com outro método de pagamento.
+          </p>
+        </div>
+      </div>
+
+      <div *ngIf="isPending && transaction?.paymentMethod === 'pix'" class="pending-content">
+        <div class="pending-message">
+          <p>Aguardando confirmação do pagamento PIX.</p>
+          <p class="sub-message">
+            O pagamento será confirmado automaticamente após a conclusão no seu banco.
+          </p>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="actions">
+        <button 
+          class="btn-primary w-full" 
+          (click)="returnToStore()">
+          {{ isApproved ? 'Continuar Compra' : 'Voltar à Loja' }}
+        </button>
+        
+        <div *ngIf="!isApproved && !isPending" class="secondary-actions">
+          <button 
+            class="btn-secondary w-full" 
+            (click)="tryAgain()">
+            Tentar Novamente
+          </button>
+        </div>
+      </div>
+
+      <!-- Support -->
+      <div class="support-section">
+        <p class="support-text">
+          Precisa de ajuda? 
+          <a href="mailto:suporte@pagamentos.com" class="support-link">
+            Entre em contato
+          </a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
