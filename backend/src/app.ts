@@ -51,13 +51,25 @@ class App {
     // Security middleware
     this.app.use(helmet());
 
-    // Dynamic CORS
-    const allowedOrigins = env.frontendUrls.length ? env.frontendUrls : ['https://sistema-de-pagamentos.onrender.com','http://localhost:4200' ];
+    // Dynamic CORS (multi-origem com normalização e fallback)
+    const rawOrigins = (env.frontendUrls && env.frontendUrls.length)
+      ? env.frontendUrls
+      : ['https://sistema-de-pagamentos.onrender.com', 'http://localhost:4200'];
+
+    const allowedOrigins = rawOrigins
+      .map(o => o.trim())
+      .filter(Boolean)
+      .map(o => o.replace(/\/$/, '').toLowerCase());
+
     this.app.use(cors({
       origin: (origin, cb) => {
-        if (!origin) return cb(null, true); // non-browser clients
-        if (allowedOrigins.includes(origin)) return cb(null, true);
-        return cb(new Error('CORS_NOT_ALLOWED'));
+        if (!origin) return cb(null, true); // curl / server-to-server
+        const clean = origin.replace(/\/$/, '').toLowerCase();
+        if (allowedOrigins.includes(clean)) return cb(null, true);
+        if (!env.isProd) {
+          console.warn('[CORS] Origin bloqueada:', origin, 'Permitidas:', allowedOrigins.join(', '));
+        }
+        return cb(null, false); // responde sem headers CORS (browser bloqueia)
       },
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],

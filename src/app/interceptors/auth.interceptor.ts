@@ -1,9 +1,17 @@
 import { HttpInterceptorFn, HttpRequest, HttpHandlerFn } from '@angular/common/http';
 
-// Interceptor responsável por anexar o header Authorization com o token JWT
+// Interceptor: anexa Authorization se a requisição for para nossa API
 export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, next: HttpHandlerFn) => {
-  // Apenas adiciona Authorization para chamadas à nossa API backend
-  const isApiRequest = req.url.startsWith('http://localhost:3000/api/');
+  const prodBase = 'https://sistema-de-pagamentos-backend.onrender.com/api/';
+  const localBase = 'http://localhost:'; // qualquer porta local
+
+  const url = req.url;
+  const isApiRequest = (
+    url.startsWith(prodBase) ||
+    (url.startsWith(localBase) && url.includes('/api/')) ||
+    url.startsWith('/api/') // caso no futuro use caminhos relativos
+  );
+
   if (!isApiRequest) {
     return next(req);
   }
@@ -13,11 +21,9 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, ne
     return next(req);
   }
 
-  const cloned = req.clone({
+  return next(req.clone({
     setHeaders: {
       Authorization: `Bearer ${token}`
     }
-  });
-
-  return next(cloned);
+  }));
 };

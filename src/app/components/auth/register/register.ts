@@ -1,7 +1,7 @@
-import { Component, Output, EventEmitter } from '@angular/core';
+import { Component, Output, EventEmitter, OnDestroy, input } from '@angular/core';
+import { finalize } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
 import { UserRegistration, User } from '../../../models/user.model';
 
@@ -11,9 +11,11 @@ import { UserRegistration, User } from '../../../models/user.model';
   templateUrl: './register.html',
   styleUrl: './register.css'
 })
-export class RegisterComponent {
+export class RegisterComponent implements OnDestroy {
   @Output() switchToLogin = new EventEmitter<void>();
   @Output() registerSuccess = new EventEmitter<void>();
+  // Tempo (ms) que a mensagem de sucesso fica visível antes de trocar para login
+  redirectDelay = input<number>(1500);
 
   dadosCadastro: UserRegistration = {
     email: '',
@@ -25,17 +27,16 @@ export class RegisterComponent {
   };
   confirmarSenha = '';
   carregando = false;
+  sucessoMsg = '';
   mostrarSenha = false;
   mostrarConfirmarSenha = false;
   erros: { [key: string]: string } = {};
   erroGeral = '';
   aceitarTermos = false;
-  usuarioCadastrado: User | null = null;
-  mostrarResumo = false;
+  private redirectTimeoutId: any;
 
   constructor(
-    private authService: AuthService,
-    private router: Router
+    private authService: AuthService
   ) {}
 
   onSubmit(): void {
@@ -44,32 +45,36 @@ export class RegisterComponent {
     }
     this.carregando = true;
     this.erroGeral = '';
-    this.authService.register(this.dadosCadastro).subscribe({
+    console.log('[Register] Enviando requisição de registro', this.dadosCadastro.email);
+    this.authService.register(this.dadosCadastro)
+      .pipe(
+        finalize(() => {
+          // Garantir reset sempre
+          this.carregando = false;
+          console.log('[Register] finalize chamado, carregando=false');
+        })
+      )
+      .subscribe({
       next: (response) => {
-        if (response.success) {
+        console.log('[Register] Resposta recebida', response);
+        if (response.success && response.data?.user) {
+          // Feedback rápido e redireciona para login em seguida
+          this.sucessoMsg = 'Conta criada com sucesso! Faça login para continuar.';
           this.registerSuccess.emit();
-          if (response.data?.user) {
-            this.usuarioCadastrado = response.data.user;
-            this.mostrarResumo = true;
-            // Limpa dados do formulário para evitar reenvio
-            this.dadosCadastro = {
-              email: '',
-              password: '',
-              firstName: '',
-              lastName: '',
-              phone: '',
-              document: ''
-            };
-            this.confirmarSenha = '';
-          }
+          // Limpa formulário
+          this.dadosCadastro = { email: '', password: '', firstName: '', lastName: '', phone: '', document: '' };
+          this.confirmarSenha = '';
+          // Delay curto para o usuário ver a mensagem
+          this.redirectTimeoutId = setTimeout(() => {
+            this.switchToLogin.emit();
+          }, this.redirectDelay());
         } else {
           this.erroGeral = response.error?.message || 'Erro ao criar conta';
         }
-        this.carregando = false;
       },
       error: (error) => {
+        console.error('[Register] Erro na requisição', error);
         this.erroGeral = error.error?.message || 'Erro ao conectar com o servidor';
-        this.carregando = false;
       }
     });
   }
@@ -203,7 +208,9 @@ export class RegisterComponent {
     return 'strong';
   }
 
-  proceedToDashboard(): void {
-    this.router.navigate(['/dashboard']);
+  ngOnDestroy(): void {
+    if (this.redirectTimeoutId) {
+      clearTimeout(this.redirectTimeoutId);
+    }
   }
 }

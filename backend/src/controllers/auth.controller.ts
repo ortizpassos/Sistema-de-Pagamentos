@@ -55,13 +55,15 @@ class AuthController {
     const verificationToken = user.generateEmailVerificationToken();
     await user.save();
 
-    // Send verification email
-    try {
-      await emailService.sendVerificationEmail(email, verificationToken, firstName);
-    } catch (error) {
-      console.error('Failed to send verification email:', error);
-      // Don't fail registration if email fails
-    }
+    // Send verification email (non-blocking)
+    (async () => {
+      try {
+        await emailService.sendVerificationEmail(email, verificationToken, firstName);
+        if (!env.isProd) console.log('[register] verification email queued/sent');
+      } catch (error) {
+        console.error('[register] Failed to send verification email (non-blocking):', error);
+      }
+    })();
 
     // Auto login feature flag
     if (env.features.autoLoginAfterRegister) {
@@ -85,16 +87,23 @@ class AuthController {
       return;
     }
 
+  // Generate tokens (default path)
+    const { accessToken, refreshToken } = generateTokens(user._id, user.email);
+    // Persistir refresh token
+    user.refreshTokens.push(refreshToken);
+    await user.save();
+
     const response: AuthResponse = {
       success: true,
       data: {
         user: user.toJSON(),
-        token: '',
-        refreshToken: '',
-        expiresIn: 0
+        token: accessToken,
+        refreshToken,
+        expiresIn: 3600 // 1h em segundos
       }
     };
     res.status(201).json(response);
+    if (!env.isProd) console.log('[register] user created and response sent:', user.email);
   });
 
   // Login user

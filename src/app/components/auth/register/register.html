@@ -1,24 +1,11 @@
 <div class="register-container">
-  <!-- Resumo pós-registro -->
-  <div *ngIf="mostrarResumo && usuarioCadastrado" class="register-summary">
-    <h2 class="summary-title">Conta criada com sucesso 🎉</h2>
-    <p class="summary-subtitle">Aqui estão os detalhes do seu cadastro:</p>
-    <div class="summary-card">
-      <div class="summary-row"><span class="label">Nome:</span><span class="value">{{ usuarioCadastrado.firstName }} {{ usuarioCadastrado.lastName }}</span></div>
-      <div class="summary-row"><span class="label">Email:</span><span class="value">{{ usuarioCadastrado.email }}</span></div>
-      <div class="summary-row" *ngIf="usuarioCadastrado.phone"><span class="label">Telefone:</span><span class="value">{{ usuarioCadastrado.phone }}</span></div>
-      <div class="summary-row" *ngIf="usuarioCadastrado.document"><span class="label">CPF:</span><span class="value">{{ usuarioCadastrado.document }}</span></div>
-      <div class="summary-row"><span class="label">Verificado:</span><span class="value" [class]="usuarioCadastrado.isEmailVerified ? 'status-ok' : 'status-pending'">{{ usuarioCadastrado.isEmailVerified ? 'Sim' : 'Pendente' }}</span></div>
-      <div class="summary-row"><span class="label">Ativo:</span><span class="value" [class]="usuarioCadastrado.isActive ? 'status-ok' : 'status-error'">{{ usuarioCadastrado.isActive ? 'Sim' : 'Inativo' }}</span></div>
-      <div class="summary-info" *ngIf="!usuarioCadastrado.isEmailVerified">Enviamos um email de verificação. Verifique sua caixa de entrada.</div>
-    </div>
-    <div class="summary-actions">
-      <button type="button" class="btn-dashboard" (click)="proceedToDashboard()">Ir para Dashboard</button>
-      <button type="button" class="btn-new" (click)="mostrarResumo=false; usuarioCadastrado=null;">Cadastrar outro usuário</button>
-    </div>
+  <!-- Mensagem de sucesso curta -->
+  <div *ngIf="sucessoMsg" class="alert alert-success fade-in">
+    <div class="alert-icon success-icon"></div>
+    <span>{{ sucessoMsg }}</span>
   </div>
 
-  <ng-container *ngIf="!mostrarResumo">
+  <ng-container *ngIf="!sucessoMsg">
   <div class="register-header">
     <h2 class="register-title">Criar nova conta</h2>
     <p class="register-subtitle">Cadastre-se para salvar seus cartões e facilitar pagamentos futuros</p>
