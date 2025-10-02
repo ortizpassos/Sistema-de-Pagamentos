@@ -52,7 +52,7 @@ class App {
     this.app.use(helmet());
 
     // Dynamic CORS
-    const allowedOrigins = env.frontendUrls.length ? env.frontendUrls : ['http://localhost:4200'];
+    const allowedOrigins = env.frontendUrls.length ? env.frontendUrls : ['https://sistema-de-pagamentos.onrender.com'];
     this.app.use(cors({
       origin: (origin, cb) => {
         if (!origin) return cb(null, true); // non-browser clients
