@@ -2,10 +2,10 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
-import dotenv from 'dotenv';
 import { connectDatabase } from './utils/database';
 import { errorHandler } from './middleware/errorHandler';
 import { requestLogger } from './middleware/requestLogger';
+import { env } from './config/env';
 
 // Routes
 import authRoutes from './routes/auth.routes';
@@ -14,19 +14,14 @@ import cardRoutes from './routes/card.routes';
 import debugRoutes from './routes/debug.routes';
 import userRoutes from './routes/user.routes';
 
-// Load environment variables
-dotenv.config();
-
 class App {
   public app: express.Application;
   private port: number;
 
   constructor() {
     this.app = express();
-    this.port = parseInt(process.env.PORT || '3000');
-    
-    // Validate critical environment variables early (fail fast)
-    this.validateEnvironment();
+  this.port = env.port;
+  this.validateEnvironment();
 
     this.initializeMiddlewares();
     this.initializeRoutes();
@@ -35,7 +30,7 @@ class App {
   }
 
   private validateEnvironment(): void {
-    const key = process.env.ENCRYPTION_KEY;
+    const key = env.encryptionKey;
     if (!key) {
       console.error('❌ ENCRYPTION_KEY is not defined in environment variables');
       process.exit(1);
@@ -44,27 +39,37 @@ class App {
       console.error(`❌ ENCRYPTION_KEY must be exactly 32 characters long. Current length: ${key.length}`);
       process.exit(1);
     }
-    if (process.env.NODE_ENV !== 'production') {
+    if (!env.isProd) {
       console.log('🔐 ENCRYPTION_KEY loaded and valid (length 32)');
     }
   }
 
   private initializeMiddlewares(): void {
+    // Trust proxy (Render / proxies)
+    this.app.set('trust proxy', 1);
+
     // Security middleware
     this.app.use(helmet());
-    
-    // CORS configuration
+
+    // Dynamic CORS
+    const allowedOrigins = env.frontendUrls.length ? env.frontendUrls : ['http://localhost:4200'];
     this.app.use(cors({
-      origin: process.env.FRONTEND_URL || 'http://localhost:4200',
+      origin: (origin, cb) => {
+        if (!origin) return cb(null, true); // non-browser clients
+        if (allowedOrigins.includes(origin)) return cb(null, true);
+        return cb(new Error('CORS_NOT_ALLOWED'));
+      },
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization']
+      allowedHeaders: ['Content-Type', 'Authorization', 'Accept']
     }));
 
-    // Rate limiting
+    // Rate limiting (environment driven)
     const limiter = rateLimit({
-      windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000'), // 15 minutes
-      max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100'), // limit each IP to 100 requests per windowMs
+      windowMs: env.rateLimit.windowMs,
+      max: env.rateLimit.max,
+      standardHeaders: true,
+      legacyHeaders: false,
       message: {
         success: false,
         error: {
@@ -73,7 +78,7 @@ class App {
         }
       }
     });
-    this.app.use('/api/', limiter);
+    this.app.use('/api', limiter);
 
     // Body parsing middleware
     this.app.use(express.json({ limit: '10mb' }));
@@ -97,10 +102,11 @@ class App {
     // API routes
     this.app.use('/api/auth', authRoutes);
     this.app.use('/api/payments', paymentRoutes);
-  this.app.use('/api/cards', cardRoutes);
-  this.app.use('/api/users', userRoutes);
-  // Debug / diagnostics routes (keep last before 404, optionally restrict to non-production if desired)
-  this.app.use('/api/debug', debugRoutes);
+    this.app.use('/api/cards', cardRoutes);
+    this.app.use('/api/users', userRoutes);
+    if (!env.isProd) {
+      this.app.use('/api/debug', debugRoutes);
+    }
 
     // 404 handler
     this.app.use('*', (req, res) => {
@@ -131,9 +137,12 @@ class App {
   public listen(): void {
     this.app.listen(this.port, () => {
       console.log(`🚀 Server running on port ${this.port}`);
-      console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-      console.log(`📡 API available at: http://localhost:${this.port}/api`);
-      console.log(`❤️  Health check: http://localhost:${this.port}/health`);
+      console.log(`🌍 Environment: ${env.nodeEnv}`);
+      console.log(`📡 API base: http://localhost:${this.port}/api`);
+      console.log(`❤️  Health: http://localhost:${this.port}/health`);
+      if (env.frontendUrls.length) {
+        console.log('🌐 Allowed CORS Origins:', env.frontendUrls.join(', '));
+      }
     });
   }
 }

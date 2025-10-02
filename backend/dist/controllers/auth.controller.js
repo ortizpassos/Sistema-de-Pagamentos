@@ -7,6 +7,7 @@ exports.authController = void 0;
 const crypto_1 = __importDefault(require("crypto"));
 const User_1 = require("../models/User");
 const auth_1 = require("../middleware/auth");
+const env_1 = require("../config/env");
 const email_service_1 = require("../services/email.service");
 const errorHandler_1 = require("../middleware/errorHandler");
 class AuthController {
@@ -39,6 +40,25 @@ class AuthController {
             }
             catch (error) {
                 console.error('Failed to send verification email:', error);
+            }
+            if (env_1.env.features.autoLoginAfterRegister) {
+                const { accessToken, refreshToken } = (0, auth_1.generateTokens)(user._id, user.email);
+                const freshUser = await User_1.User.findById(user._id).select('+refreshTokens');
+                if (freshUser) {
+                    freshUser.refreshTokens.push(refreshToken);
+                    await freshUser.save();
+                }
+                const response = {
+                    success: true,
+                    data: {
+                        user: user.toJSON(),
+                        token: accessToken,
+                        refreshToken,
+                        expiresIn: 3600
+                    }
+                };
+                res.status(201).json(response);
+                return;
             }
             const response = {
                 success: true,

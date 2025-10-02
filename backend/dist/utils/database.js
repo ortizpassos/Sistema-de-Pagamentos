@@ -5,11 +5,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.connectDatabase = void 0;
 const mongoose_1 = __importDefault(require("mongoose"));
+const env_1 = require("../config/env");
 const connectDatabase = async () => {
+    const mongoUri = env_1.env.mongoUri || 'mongodb://localhost:27017/sistema_pagamentos';
+    const startedAt = Date.now();
     try {
-        const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/sistema_pagamentos';
+        console.log(`[DB] Connecting to: ${mongoUri}`);
         await mongoose_1.default.connect(mongoUri, {});
-        console.log('✅ MongoDB connected successfully');
+        const ms = Date.now() - startedAt;
+        console.log(`✅ MongoDB connected (${ms}ms)`);
         mongoose_1.default.connection.on('error', (error) => {
             console.error('❌ MongoDB connection error:', error);
         });
@@ -18,7 +22,7 @@ const connectDatabase = async () => {
         });
         process.on('SIGINT', async () => {
             await mongoose_1.default.connection.close();
-            console.log('🔄 MongoDB connection closed due to app termination');
+            console.log('🔄 MongoDB connection closed (SIGINT)');
             process.exit(0);
         });
     }

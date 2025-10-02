@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import crypto from 'crypto';
 import { User, IUser } from '../models/User';
 import { generateTokens, verifyToken } from '../middleware/auth';
+import { env } from '../config/env';
 import { emailService } from '../services/email.service';
 import { AppError, asyncHandler } from '../middleware/errorHandler';
 
@@ -62,6 +63,28 @@ class AuthController {
       // Don't fail registration if email fails
     }
 
+    // Auto login feature flag
+    if (env.features.autoLoginAfterRegister) {
+      const { accessToken, refreshToken } = generateTokens(user._id, user.email);
+      // Persist refresh token
+      const freshUser = await User.findById(user._id).select('+refreshTokens');
+      if (freshUser) {
+        freshUser.refreshTokens.push(refreshToken);
+        await freshUser.save();
+      }
+      const response: AuthResponse = {
+        success: true,
+        data: {
+          user: user.toJSON(),
+          token: accessToken,
+          refreshToken,
+          expiresIn: 3600
+        }
+      };
+      res.status(201).json(response);
+      return;
+    }
+
     const response: AuthResponse = {
       success: true,
       data: {
@@ -71,7 +94,6 @@ class AuthController {
         expiresIn: 0
       }
     };
-
     res.status(201).json(response);
   });
 
@@ -91,7 +113,7 @@ class AuthController {
     }
 
     // Generate tokens
-    const { accessToken, refreshToken } = generateTokens(user._id, user.email);
+  const { accessToken, refreshToken } = generateTokens(user._id, user.email);
 
     // Save refresh token
     user.refreshTokens.push(refreshToken);
@@ -154,7 +176,7 @@ class AuthController {
       }
 
       // Generate new tokens
-      const { accessToken, refreshToken: newRefreshToken } = generateTokens(user._id, user.email);
+  const { accessToken, refreshToken: newRefreshToken } = generateTokens(user._id, user.email);
 
       // Replace old refresh token with new one
       const tokenIndex = user.refreshTokens.indexOf(refreshToken);
