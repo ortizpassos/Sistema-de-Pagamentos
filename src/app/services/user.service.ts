@@ -14,7 +14,8 @@ interface LookupResponse { success: boolean; data: UserOption | null; }
 @Injectable({ providedIn: 'root' })
 export class UserService {
   private http = inject(HttpClient);
-  private api = (typeof window !== 'undefined' ? window.location.origin : '') + '/api/users';
+  // URL absoluta apontando para backend em produção
+  private api = 'https://sistema-de-pagamentos-backend.onrender.com/api/users';
 
   search(term: string): Observable<UserOption[]> {
     const q = term?.trim();
