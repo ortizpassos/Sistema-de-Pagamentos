@@ -21,7 +21,8 @@
       <app-login 
         *ngIf="isLoginMode"
         (loginSuccess)="onLoginSuccess()"
-        (switchToRegister)="toggleMode()">
+        (switchToRegister)="toggleMode()"
+        [successMessage]="postRegisterMsg">
       </app-login>
 
       <app-register 

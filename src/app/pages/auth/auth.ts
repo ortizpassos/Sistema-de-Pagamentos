@@ -12,6 +12,7 @@ import { RegisterComponent } from '../../components/auth/register/register';
 })
 export class AuthComponent {
   isLoginMode = true;
+  postRegisterMsg = '';
 
   constructor(private router: Router) {}
 
@@ -25,7 +26,8 @@ export class AuthComponent {
   }
 
   onRegisterSuccess() {
-    // Após registro bem-sucedido, trocar para modo de login
+    // Trocar para login e definir mensagem de sucesso
+    this.postRegisterMsg = 'Cadastro realizado com sucesso!';
     this.isLoginMode = true;
   }
 }

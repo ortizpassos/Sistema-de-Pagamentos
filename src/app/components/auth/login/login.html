@@ -1,4 +1,9 @@
 <div class="login-container">
+  <!-- Mensagem de sucesso pós-registro -->
+  <div *ngIf="showSuccess && successMessage()" class="alert alert-success">
+    <div class="alert-icon success-icon"></div>
+    <span>{{ successMessage() }}</span>
+  </div>
   <div class="login-header">
     <h2 class="login-title">Entrar na sua conta</h2>
     <p class="login-subtitle">Acesse sua área pessoal e gerencie seus pagamentos</p>

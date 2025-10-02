@@ -1,4 +1,4 @@
-import { Component, Output, EventEmitter } from '@angular/core';
+import { Component, Output, EventEmitter, input, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -11,9 +11,11 @@ import { UserLogin } from '../../../models/user.model';
   templateUrl: './login.html',
   styleUrl: './login.css'
 })
-export class LoginComponent {
+export class LoginComponent implements OnChanges {
   @Output() switchToRegister = new EventEmitter<void>();
   @Output() loginSuccess = new EventEmitter<void>();
+  successMessage = input<string>('');
+  showSuccess = false;
 
   dadosLogin: UserLogin = {
     email: '',
@@ -29,7 +31,21 @@ export class LoginComponent {
     private router: Router
   ) {}
 
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['successMessage']) {
+      const val = this.successMessage();
+      this.showSuccess = !!val;
+      if (this.showSuccess) {
+        setTimeout(() => {
+          this.showSuccess = false;
+        }, 5000);
+      }
+    }
+  }
+
   onSubmit(): void {
+    // Ao iniciar login manual, ocultar mensagem de sucesso antiga
+    if (this.showSuccess) this.showSuccess = false;
     if (!this.validarFormulario()) {
       return;
     }
