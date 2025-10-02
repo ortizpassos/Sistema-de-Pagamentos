@@ -13,7 +13,7 @@ import {
   providedIn: 'root'
 })
 export class PaymentService {
-  private apiUrl = 'http://localhost:3000/api'; // URL do backend
+  private apiUrl = 'https://sistema-de-pagamentos-backend.onrender.com/api'; // URL do backend
 
   constructor(private http: HttpClient) {}
 

@@ -16,7 +16,7 @@ export interface SavedCardResponse {
   providedIn: 'root'
 })
 export class CardService {
-  private apiUrl = 'http://localhost:3000/api/cards';
+  private apiUrl = 'https://sistema-de-pagamentos-backend.onrender.com/api/cards';
 
   constructor(private http: HttpClient) {}
 
