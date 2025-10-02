@@ -1,13 +1,33 @@
 <div class="register-container">
+  <!-- Resumo pós-registro -->
+  <div *ngIf="mostrarResumo && usuarioCadastrado" class="register-summary">
+    <h2 class="summary-title">Conta criada com sucesso 🎉</h2>
+    <p class="summary-subtitle">Aqui estão os detalhes do seu cadastro:</p>
+    <div class="summary-card">
+      <div class="summary-row"><span class="label">Nome:</span><span class="value">{{ usuarioCadastrado.firstName }} {{ usuarioCadastrado.lastName }}</span></div>
+      <div class="summary-row"><span class="label">Email:</span><span class="value">{{ usuarioCadastrado.email }}</span></div>
+      <div class="summary-row" *ngIf="usuarioCadastrado.phone"><span class="label">Telefone:</span><span class="value">{{ usuarioCadastrado.phone }}</span></div>
+      <div class="summary-row" *ngIf="usuarioCadastrado.document"><span class="label">CPF:</span><span class="value">{{ usuarioCadastrado.document }}</span></div>
+      <div class="summary-row"><span class="label">Verificado:</span><span class="value" [class]="usuarioCadastrado.isEmailVerified ? 'status-ok' : 'status-pending'">{{ usuarioCadastrado.isEmailVerified ? 'Sim' : 'Pendente' }}</span></div>
+      <div class="summary-row"><span class="label">Ativo:</span><span class="value" [class]="usuarioCadastrado.isActive ? 'status-ok' : 'status-error'">{{ usuarioCadastrado.isActive ? 'Sim' : 'Inativo' }}</span></div>
+      <div class="summary-info" *ngIf="!usuarioCadastrado.isEmailVerified">Enviamos um email de verificação. Verifique sua caixa de entrada.</div>
+    </div>
+    <div class="summary-actions">
+      <button type="button" class="btn-dashboard" (click)="proceedToDashboard()">Ir para Dashboard</button>
+      <button type="button" class="btn-new" (click)="mostrarResumo=false; usuarioCadastrado=null;">Cadastrar outro usuário</button>
+    </div>
+  </div>
+
+  <ng-container *ngIf="!mostrarResumo">
   <div class="register-header">
     <h2 class="register-title">Criar nova conta</h2>
     <p class="register-subtitle">Cadastre-se para salvar seus cartões e facilitar pagamentos futuros</p>
   </div>
 
   <!-- Erro geral -->
-  <div *ngIf="generalError" class="alert alert-error">
+  <div *ngIf="erroGeral" class="alert alert-error">
     <div class="alert-icon error-icon"></div>
-    <span>{{ generalError }}</span>
+    <span>{{ erroGeral }}</span>
   </div>
 
   <form (ngSubmit)="onSubmit()" class="register-form">
@@ -19,13 +39,13 @@
           id="firstName"
           type="text"
           placeholder="Seu nome"
-          [(ngModel)]="registerData.firstName"
+          [(ngModel)]="dadosCadastro.firstName"
           (input)="onInputChange('firstName')"
-          [class]="'form-input ' + (errors['firstName'] ? 'input-error' : '')"
+          [class]="'form-input ' + (erros['firstName'] ? 'input-error' : '')"
           name="firstName"
           autocomplete="given-name"
         />
-        <span *ngIf="errors['firstName']" class="error-message">{{ errors['firstName'] }}</span>
+        <span *ngIf="erros['firstName']" class="error-message">{{ erros['firstName'] }}</span>
       </div>
 
       <div class="form-group">
@@ -34,13 +54,13 @@
           id="lastName"
           type="text"
           placeholder="Seu sobrenome"
-          [(ngModel)]="registerData.lastName"
+          [(ngModel)]="dadosCadastro.lastName"
           (input)="onInputChange('lastName')"
-          [class]="'form-input ' + (errors['lastName'] ? 'input-error' : '')"
+          [class]="'form-input ' + (erros['lastName'] ? 'input-error' : '')"
           name="lastName"
           autocomplete="family-name"
         />
-        <span *ngIf="errors['lastName']" class="error-message">{{ errors['lastName'] }}</span>
+        <span *ngIf="erros['lastName']" class="error-message">{{ erros['lastName'] }}</span>
       </div>
     </div>
 
@@ -51,13 +71,13 @@
         id="email"
         type="email"
         placeholder="seu@email.com"
-        [(ngModel)]="registerData.email"
+        [(ngModel)]="dadosCadastro.email"
         (input)="onInputChange('email')"
-        [class]="'form-input ' + (errors['email'] ? 'input-error' : '')"
+        [class]="'form-input ' + (erros['email'] ? 'input-error' : '')"
         name="email"
         autocomplete="email"
       />
-      <span *ngIf="errors['email']" class="error-message">{{ errors['email'] }}</span>
+      <span *ngIf="erros['email']" class="error-message">{{ erros['email'] }}</span>
     </div>
 
     <!-- Telefone e CPF -->
@@ -68,13 +88,13 @@
           id="phone"
           type="tel"
           placeholder="(11) 99999-9999"
-          [(ngModel)]="registerData.phone"
+          [(ngModel)]="dadosCadastro.phone"
           (input)="onInputChange('phone')"
-          [class]="'form-input ' + (errors['phone'] ? 'input-error' : '')"
+          [class]="'form-input ' + (erros['phone'] ? 'input-error' : '')"
           name="phone"
           autocomplete="tel"
         />
-        <span *ngIf="errors['phone']" class="error-message">{{ errors['phone'] }}</span>
+        <span *ngIf="erros['phone']" class="error-message">{{ erros['phone'] }}</span>
       </div>
 
       <div class="form-group">
@@ -83,13 +103,13 @@
           id="document"
           type="text"
           placeholder="000.000.000-00"
-          [(ngModel)]="registerData.document"
+          [(ngModel)]="dadosCadastro.document"
           (input)="onInputChange('document')"
-          [class]="'form-input ' + (errors['document'] ? 'input-error' : '')"
+          [class]="'form-input ' + (erros['document'] ? 'input-error' : '')"
           name="document"
           maxlength="14"
         />
-        <span *ngIf="errors['document']" class="error-message">{{ errors['document'] }}</span>
+        <span *ngIf="erros['document']" class="error-message">{{ erros['document'] }}</span>
       </div>
     </div>
 
@@ -99,11 +119,11 @@
       <div class="password-input-group">
         <input
           id="password"
-          [type]="showPassword ? 'text' : 'password'"
+          [type]="mostrarSenha ? 'text' : 'password'"
           placeholder="Sua senha"
-          [(ngModel)]="registerData.password"
+          [(ngModel)]="dadosCadastro.password"
           (input)="onInputChange('password')"
-          [class]="'form-input ' + (errors['password'] ? 'input-error' : '')"
+          [class]="'form-input ' + (erros['password'] ? 'input-error' : '')"
           name="password"
           autocomplete="new-password"
         />
@@ -112,12 +132,12 @@
           class="password-toggle"
           (click)="togglePasswordVisibility()"
         >
-          <div [class]="showPassword ? 'eye-off-icon' : 'eye-icon'"></div>
+          <div [class]="mostrarSenha ? 'eye-off-icon' : 'eye-icon'"></div>
         </button>
       </div>
       
       <!-- Indicador de força da senha -->
-      <div *ngIf="registerData.password" class="password-strength">
+  <div *ngIf="dadosCadastro.password" class="password-strength">
         <div class="strength-bar">
           <div [class]="'strength-fill ' + getPasswordStrength()"></div>
         </div>
@@ -127,7 +147,7 @@
         </span>
       </div>
       
-      <span *ngIf="errors['password']" class="error-message">{{ errors['password'] }}</span>
+      <span *ngIf="erros['password']" class="error-message">{{ erros['password'] }}</span>
     </div>
 
     <!-- Confirmar Senha -->
@@ -136,11 +156,11 @@
       <div class="password-input-group">
         <input
           id="confirmPassword"
-          [type]="showConfirmPassword ? 'text' : 'password'"
+          [type]="mostrarConfirmarSenha ? 'text' : 'password'"
           placeholder="Confirme sua senha"
-          [(ngModel)]="confirmPassword"
+          [(ngModel)]="confirmarSenha"
           (input)="onInputChange('confirmPassword')"
-          [class]="'form-input ' + (errors['confirmPassword'] ? 'input-error' : '')"
+          [class]="'form-input ' + (erros['confirmPassword'] ? 'input-error' : '')"
           name="confirmPassword"
           autocomplete="new-password"
         />
@@ -149,10 +169,10 @@
           class="password-toggle"
           (click)="toggleConfirmPasswordVisibility()"
         >
-          <div [class]="showConfirmPassword ? 'eye-off-icon' : 'eye-icon'"></div>
+          <div [class]="mostrarConfirmarSenha ? 'eye-off-icon' : 'eye-icon'"></div>
         </button>
       </div>
-      <span *ngIf="errors['confirmPassword']" class="error-message">{{ errors['confirmPassword'] }}</span>
+      <span *ngIf="erros['confirmPassword']" class="error-message">{{ erros['confirmPassword'] }}</span>
     </div>
 
     <!-- Termos -->
@@ -161,9 +181,9 @@
         <input
           id="acceptTerms"
           type="checkbox"
-          [(ngModel)]="acceptTerms"
+          [(ngModel)]="aceitarTermos"
           (change)="onInputChange('terms')"
-          [class]="'form-checkbox ' + (errors['terms'] ? 'checkbox-error' : '')"
+          [class]="'form-checkbox ' + (erros['terms'] ? 'checkbox-error' : '')"
           name="acceptTerms"
         />
         <label for="acceptTerms" class="checkbox-label">
@@ -171,17 +191,17 @@
           e <a href="/privacy" target="_blank" class="link">política de privacidade</a>
         </label>
       </div>
-      <span *ngIf="errors['terms']" class="error-message">{{ errors['terms'] }}</span>
+      <span *ngIf="erros['terms']" class="error-message">{{ erros['terms'] }}</span>
     </div>
 
     <!-- Botão de registro -->
     <button
       type="submit"
       class="btn-register"
-      [disabled]="isLoading"
+      [disabled]="carregando"
     >
-      <div *ngIf="isLoading" class="spinner-small"></div>
-      <span>{{ isLoading ? 'Criando conta...' : 'Criar conta' }}</span>
+      <div *ngIf="carregando" class="spinner-small"></div>
+      <span>{{ carregando ? 'Criando conta...' : 'Criar conta' }}</span>
     </button>
   </form>
 
@@ -196,4 +216,5 @@
       Entrar
     </button>
   </div>
+  </ng-container>
 </div>

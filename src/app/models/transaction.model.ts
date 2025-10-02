@@ -18,6 +18,7 @@ export interface Transaction {
   id: string;
   orderId: string;
   amount: number;
+  baseAmount?: number;
   currency: string;
   paymentMethod: PaymentMethod;
   status: TransactionStatus;
@@ -33,6 +34,15 @@ export interface Transaction {
   expiresAt?: Date;
   userId?: string; // ID do usuário logado (opcional para pagamentos sem cadastro)
   savedCardId?: string; // ID do cartão salvo usado (se aplicável)
+  recipientUserId?: string;
+  recipientPixKey?: string;
+  installments?: {
+    quantity: number;
+    interestMonthly: number;
+    totalWithInterest: number;
+    installmentValue: number;
+    mode: 'AVISTA' | 'PARCELADO';
+  };
 }
 
 export interface PaymentInitiateRequest {
@@ -43,6 +53,11 @@ export interface PaymentInitiateRequest {
   customer: Customer;
   returnUrl: string;
   callbackUrl: string;
+  recipientUserId?: string;
+  recipientPixKey?: string;
+  installments?: {
+    quantity: number; // 1 = à vista
+  };
 }
 
 export interface CreditCardPaymentRequest {

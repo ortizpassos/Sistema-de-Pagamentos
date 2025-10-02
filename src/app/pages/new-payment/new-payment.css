@@ -1,0 +1,13 @@
+.new-payment-container { max-width: 560px; margin: 2rem auto; background: #fff; padding: 1.5rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.06);} 
+h1 { font-size: 1.6rem; margin-bottom: 1rem; }
+.field-group { margin-bottom: 1rem; display: flex; flex-direction: column; gap: .35rem; }
+label { font-weight: 600; font-size: .9rem; }
+input, select { padding: .55rem .7rem; border: 1px solid #ccc; border-radius: 6px; font-size: .95rem; }
+.recipient-options { display: flex; flex-direction: column; gap: .35rem; font-size: .85rem; }
+.sub-field { margin-top: .5rem; }
+.acoes { display: flex; gap: .75rem; margin-top: 1.25rem; }
+.btn-primary { background:#2563eb; color:#fff; border:none; padding:.7rem 1.2rem; border-radius:6px; cursor:pointer; }
+.btn-primary:disabled { opacity:.6; cursor: not-allowed; }
+.btn-secondary { background:#e2e8f0; color:#111; border:none; padding:.7rem 1.2rem; border-radius:6px; cursor:pointer; }
+.erros { margin-top:1rem; color:#b91c1c; font-size:.85rem; }
+.parcelas-resumo { font-size:.8rem; color:#334155; margin-top:.4rem; }

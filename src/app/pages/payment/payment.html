@@ -1,6 +1,7 @@
 <div class="payment-container">
   <!-- Loading State -->
-  <div *ngIf="isLoading" class="loading-wrapper">
+  @if (isLoading) {
+  <div class="loading-wrapper">
     <div class="payment-card">
       <div class="payment-header">
         <h1 class="payment-title">Sistema de Pagamentos</h1>
@@ -11,9 +12,11 @@
       </div>
     </div>
   </div>
+  }
 
   <!-- Error State -->
-  <div *ngIf="error && !isLoading" class="error-wrapper">
+  @if (error && !isLoading) {
+  <div class="error-wrapper">
     <div class="payment-card">
       <div class="payment-header">
         <h1 class="payment-title">Erro</h1>
@@ -30,18 +33,20 @@
       </div>
     </div>
   </div>
+  }
 
   <!-- Payment Result -->
-  <div *ngIf="showResult && !isLoading">
-    <app-payment-result 
-      [transaction]="paymentResult!" 
+  @if (showResult && !isLoading) {
+    <app-payment-result
+      [transaction]="paymentResult!"
       [isSuccess]="paymentResult?.status === 'APPROVED'"
       [errorMessage]="resultError">
     </app-payment-result>
-  </div>
+  }
 
   <!-- Payment Forms -->
-  <div *ngIf="transaction && !showResult && !isLoading" class="payment-card">
+  @if (transaction && !showResult && !isLoading) {
+  <div class="payment-card">
     <div class="payment-header">
       <h1 class="payment-title">Finalizar Pagamento</h1>
       <p class="payment-subtitle">Complete os dados para processar seu pagamento</p>
@@ -57,6 +62,26 @@
               {{ paymentService.formatCurrency(transaction.amount, transaction.currency) }}
             </span>
           </div>
+          @if (transaction.baseAmount && transaction.installments?.mode==='PARCELADO') {
+          <div class="flex items-center justify-between p-4 border rounded-lg">
+            <span class="text-sm text-muted-foreground">Valor Original:</span>
+            <span class="font-semibold">
+              {{ paymentService.formatCurrency(transaction.baseAmount, transaction.currency) }}
+            </span>
+          </div>
+          }
+          @if (transaction.installments) {
+          <div class="flex flex-col gap-1 p-4 border rounded-lg">
+            <span class="text-sm text-muted-foreground">Parcelamento:</span>
+            @if (transaction.installments.mode==='AVISTA') {
+              <span class="font-semibold">À vista (sem juros)</span>
+            }
+            @if (transaction.installments.mode==='PARCELADO') {
+              <span class="font-semibold">{{ transaction.installments.quantity }}x de {{ paymentService.formatCurrency(transaction.installments.installmentValue, transaction.currency) }} (Total {{ paymentService.formatCurrency(transaction.installments.totalWithInterest, transaction.currency) }})</span>
+              <span class="text-xs text-muted-foreground">Juros: {{ (transaction.installments.interestMonthly * 100) | number:'1.0-2' }}% a.m.</span>
+            }
+          </div>
+          }
           <div class="flex items-center justify-between p-4 border rounded-lg">
             <span class="text-sm text-muted-foreground">Pedido:</span>
             <span class="font-semibold">#{{ transaction.orderId }}</span>
@@ -68,9 +93,11 @@
             </span>
           </div>
         </div>
+      </div>
 
     <!-- Payment Method Selection (if needed) -->
-    <div *ngIf="false" class="payment-method-selector">
+    @if (false) {
+    <div class="payment-method-selector">
       <div class="method-options">
         <button 
           class="method-option"
@@ -89,26 +116,27 @@
         </button>
       </div>
     </div>
+    }
 
     <!-- Payment Forms -->
     <div class="payment-forms">
       <!-- Credit Card Form -->
-      <div *ngIf="transaction.paymentMethod === 'credit_card'">
+      @if (transaction.paymentMethod === 'credit_card') {
         <app-credit-card-form 
           [transaction]="transaction"
           (success)="onPaymentSuccess($event)"
           (error)="onPaymentError($event)">
         </app-credit-card-form>
-      </div>
+      }
 
       <!-- PIX Payment -->
-      <div *ngIf="transaction.paymentMethod === 'pix'">
+      @if (transaction.paymentMethod === 'pix') {
         <app-pix-payment 
           [transaction]="transaction"
           (success)="onPaymentSuccess($event)"
           (error)="onPaymentError($event)">
         </app-pix-payment>
-      </div>
+      }
     </div>
 
     <!-- Security Notice -->
@@ -119,5 +147,7 @@
         <p>Utilizamos criptografia SSL de 256 bits para garantir a segurança dos seus dados.</p>
       </div>
     </div>
+    </div>
   </div>
+  }
 </div>

@@ -1,0 +1,20 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const payment_controller_1 = require("../controllers/payment.controller");
+const auth_1 = require("../middleware/auth");
+const paymentValidation_1 = require("../utils/paymentValidation");
+const paymentValidation_2 = require("../utils/paymentValidation");
+const router = (0, express_1.Router)();
+router.use(auth_1.authenticate);
+router.post('/initiate', (0, paymentValidation_1.validatePayment)(paymentValidation_2.initiatePaymentSchema), payment_controller_1.paymentController.initiatePayment);
+router.post('/credit-card', (0, paymentValidation_1.validatePayment)(paymentValidation_2.creditCardPaymentSchema), payment_controller_1.paymentController.processCreditCardPayment);
+router.post('/pix', (0, paymentValidation_1.validatePayment)(paymentValidation_2.pixPaymentSchema), payment_controller_1.paymentController.processPixPayment);
+router.get('/pix/:transactionId/status', payment_controller_1.paymentController.checkPixStatus);
+router.get('/:transactionId', payment_controller_1.paymentController.getTransaction);
+router.patch('/:transactionId/cancel', payment_controller_1.paymentController.cancelTransaction);
+router.get('/', payment_controller_1.paymentController.getTransactionHistory);
+router.get('/stats/overview', payment_controller_1.paymentController.getPaymentStats);
+router.get('/test/cards', payment_controller_1.paymentController.getTestCards);
+exports.default = router;
+//# sourceMappingURL=payment.routes.js.map

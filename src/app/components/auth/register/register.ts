@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
-import { UserRegistration } from '../../../models/user.model';
+import { UserRegistration, User } from '../../../models/user.model';
 
 @Component({
   selector: 'app-register',
@@ -15,7 +15,7 @@ export class RegisterComponent {
   @Output() switchToLogin = new EventEmitter<void>();
   @Output() registerSuccess = new EventEmitter<void>();
 
-  registerData: UserRegistration = {
+  dadosCadastro: UserRegistration = {
     email: '',
     password: '',
     firstName: '',
@@ -23,14 +23,15 @@ export class RegisterComponent {
     phone: '',
     document: ''
   };
-
-  confirmPassword = '';
-  isLoading = false;
-  showPassword = false;
-  showConfirmPassword = false;
-  errors: { [key: string]: string } = {};
-  generalError = '';
-  acceptTerms = false;
+  confirmarSenha = '';
+  carregando = false;
+  mostrarSenha = false;
+  mostrarConfirmarSenha = false;
+  erros: { [key: string]: string } = {};
+  erroGeral = '';
+  aceitarTermos = false;
+  usuarioCadastrado: User | null = null;
+  mostrarResumo = false;
 
   constructor(
     private authService: AuthService,
@@ -38,88 +39,99 @@ export class RegisterComponent {
   ) {}
 
   onSubmit(): void {
-    if (!this.validateForm()) {
+    if (!this.validarFormulario()) {
       return;
     }
-
-    this.isLoading = true;
-    this.generalError = '';
-
-    this.authService.register(this.registerData).subscribe({
+    this.carregando = true;
+    this.erroGeral = '';
+    this.authService.register(this.dadosCadastro).subscribe({
       next: (response) => {
         if (response.success) {
           this.registerSuccess.emit();
-          this.router.navigate(['/dashboard']);
+          if (response.data?.user) {
+            this.usuarioCadastrado = response.data.user;
+            this.mostrarResumo = true;
+            // Limpa dados do formulário para evitar reenvio
+            this.dadosCadastro = {
+              email: '',
+              password: '',
+              firstName: '',
+              lastName: '',
+              phone: '',
+              document: ''
+            };
+            this.confirmarSenha = '';
+          }
         } else {
-          this.generalError = response.error?.message || 'Erro ao criar conta';
+          this.erroGeral = response.error?.message || 'Erro ao criar conta';
         }
-        this.isLoading = false;
+        this.carregando = false;
       },
       error: (error) => {
-        this.generalError = error.error?.message || 'Erro ao conectar com o servidor';
-        this.isLoading = false;
+        this.erroGeral = error.error?.message || 'Erro ao conectar com o servidor';
+        this.carregando = false;
       }
     });
   }
 
-  validateForm(): boolean {
-    this.errors = {};
+  validarFormulario(): boolean {
+    this.erros = {};
     let isValid = true;
 
     // Validar nome
-    if (!this.registerData.firstName.trim()) {
-      this.errors['firstName'] = 'Nome é obrigatório';
+    if (!this.dadosCadastro.firstName.trim()) {
+      this.erros['firstName'] = 'Nome é obrigatório';
       isValid = false;
     }
 
     // Validar sobrenome
-    if (!this.registerData.lastName.trim()) {
-      this.errors['lastName'] = 'Sobrenome é obrigatório';
+    if (!this.dadosCadastro.lastName.trim()) {
+      this.erros['lastName'] = 'Sobrenome é obrigatório';
       isValid = false;
     }
 
     // Validar email
-    if (!this.registerData.email) {
-      this.errors['email'] = 'Email é obrigatório';
+    if (!this.dadosCadastro.email) {
+      this.erros['email'] = 'Email é obrigatório';
       isValid = false;
-    } else if (!this.authService.isEmailValid(this.registerData.email)) {
-      this.errors['email'] = 'Email inválido';
+    } else if (!this.authService.isEmailValid(this.dadosCadastro.email)) {
+      this.erros['email'] = 'Email inválido';
       isValid = false;
     }
 
     // Validar telefone (opcional, mas se preenchido deve ser válido)
-    if (this.registerData.phone && this.registerData.phone.replace(/\D/g, '').length < 10) {
-      this.errors['phone'] = 'Telefone inválido';
+    if (this.dadosCadastro.phone && this.dadosCadastro.phone.replace(/\D/g, '').length < 10) {
+      this.erros['phone'] = 'Telefone inválido';
       isValid = false;
     }
 
     // Validar documento (opcional, mas se preenchido deve ser válido)
-    if (this.registerData.document && !this.authService.validateDocument(this.registerData.document)) {
-      this.errors['document'] = 'CPF inválido';
+    if (this.dadosCadastro.document && !this.authService.validateDocument(this.dadosCadastro.document)) {
+      this.erros['document'] = 'CPF inválido';
       isValid = false;
     }
 
     // Validar senha
-    if (!this.registerData.password) {
-      this.errors['password'] = 'Senha é obrigatória';
+    if (!this.dadosCadastro.password) {
+      this.erros['password'] = 'Senha é obrigatória';
       isValid = false;
-    } else if (!this.authService.isPasswordStrong(this.registerData.password)) {
-      this.errors['password'] = 'Senha deve ter pelo menos 8 caracteres, incluindo maiúscula, minúscula, número e símbolo';
+    } else if (!this.authService.isPasswordStrong(this.dadosCadastro.password)) {
+      this.erros['password'] = 'Senha deve ter pelo menos 8 caracteres, incluindo maiúscula, minúscula, número e símbolo';
       isValid = false;
     }
 
     // Validar confirmação de senha
-    if (!this.confirmPassword) {
-      this.errors['confirmPassword'] = 'Confirmação de senha é obrigatória';
+    if (!this.confirmarSenha) {
+      this.erros['confirmPassword'] = 'Confirmação de senha é obrigatória';
       isValid = false;
-    } else if (this.confirmPassword !== this.registerData.password) {
-      this.errors['confirmPassword'] = 'Senhas não coincidem';
+    } else if (this.confirmarSenha !== this.dadosCadastro.password) {
+      this.erros['confirmPassword'] = 'Senhas não coincidem';
       isValid = false;
     }
 
     // Validar termos
-    if (!this.acceptTerms) {
-      this.errors['terms'] = 'Você deve aceitar os termos de uso';
+    if (!this.aceitarTermos) {
+      this.erros['terms'] = 'Você deve aceitar os termos de uso';
       isValid = false;
     }
 
@@ -127,21 +139,21 @@ export class RegisterComponent {
   }
 
   onInputChange(field: string): void {
-    if (this.errors[field]) {
-      delete this.errors[field];
+    if (this.erros[field]) {
+      delete this.erros[field];
     }
-    if (this.generalError) {
-      this.generalError = '';
+    if (this.erroGeral) {
+      this.erroGeral = '';
     }
 
     // Formatação automática de telefone
-    if (field === 'phone' && this.registerData.phone) {
-      this.registerData.phone = this.formatPhone(this.registerData.phone);
+    if (field === 'phone' && this.dadosCadastro.phone) {
+      this.dadosCadastro.phone = this.formatPhone(this.dadosCadastro.phone);
     }
 
     // Formatação automática de CPF
-    if (field === 'document' && this.registerData.document) {
-      this.registerData.document = this.formatCPF(this.registerData.document);
+    if (field === 'document' && this.dadosCadastro.document) {
+      this.dadosCadastro.document = this.formatCPF(this.dadosCadastro.document);
     }
   }
 
@@ -164,11 +176,11 @@ export class RegisterComponent {
   }
 
   togglePasswordVisibility(): void {
-    this.showPassword = !this.showPassword;
+    this.mostrarSenha = !this.mostrarSenha;
   }
 
   toggleConfirmPasswordVisibility(): void {
-    this.showConfirmPassword = !this.showConfirmPassword;
+    this.mostrarConfirmarSenha = !this.mostrarConfirmarSenha;
   }
 
   onSwitchToLogin(): void {
@@ -176,7 +188,7 @@ export class RegisterComponent {
   }
 
   getPasswordStrength(): string {
-    const password = this.registerData.password;
+    const password = this.dadosCadastro.password;
     if (!password) return '';
     
     let score = 0;
@@ -189,5 +201,9 @@ export class RegisterComponent {
     if (score < 3) return 'weak';
     if (score < 4) return 'medium';
     return 'strong';
+  }
+
+  proceedToDashboard(): void {
+    this.router.navigate(['/dashboard']);
   }
 }

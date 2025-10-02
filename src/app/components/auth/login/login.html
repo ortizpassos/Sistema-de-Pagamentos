@@ -5,9 +5,9 @@
   </div>
 
   <!-- Erro geral -->
-  <div *ngIf="generalError" class="alert alert-error">
+  <div *ngIf="erroGeral" class="alert alert-error">
     <div class="alert-icon error-icon"></div>
-    <span>{{ generalError }}</span>
+    <span>{{ erroGeral }}</span>
   </div>
 
   <form (ngSubmit)="onSubmit()" class="login-form">
@@ -18,13 +18,13 @@
         id="email"
         type="email"
         placeholder="seu@email.com"
-        [(ngModel)]="loginData.email"
+        [(ngModel)]="dadosLogin.email"
         (input)="onInputChange('email')"
-        [class]="'form-input ' + (errors['email'] ? 'input-error' : '')"
+        [class]="'form-input ' + (erros['email'] ? 'input-error' : '')"
         name="email"
         autocomplete="email"
       />
-      <span *ngIf="errors['email']" class="error-message">{{ errors['email'] }}</span>
+      <span *ngIf="erros['email']" class="error-message">{{ erros['email'] }}</span>
     </div>
 
     <!-- Senha -->
@@ -33,11 +33,11 @@
       <div class="password-input-group">
         <input
           id="password"
-          [type]="showPassword ? 'text' : 'password'"
+          [type]="mostrarSenha ? 'text' : 'password'"
           placeholder="Sua senha"
-          [(ngModel)]="loginData.password"
+          [(ngModel)]="dadosLogin.password"
           (input)="onInputChange('password')"
-          [class]="'form-input ' + (errors['password'] ? 'input-error' : '')"
+          [class]="'form-input ' + (erros['password'] ? 'input-error' : '')"
           name="password"
           autocomplete="current-password"
         />
@@ -45,12 +45,12 @@
           type="button"
           class="password-toggle"
           (click)="togglePasswordVisibility()"
-          [title]="showPassword ? 'Ocultar senha' : 'Mostrar senha'"
+          [title]="mostrarSenha ? 'Ocultar senha' : 'Mostrar senha'"
         >
-          <div [class]="showPassword ? 'eye-off-icon' : 'eye-icon'"></div>
+          <div [class]="mostrarSenha ? 'eye-off-icon' : 'eye-icon'"></div>
         </button>
       </div>
-      <span *ngIf="errors['password']" class="error-message">{{ errors['password'] }}</span>
+      <span *ngIf="erros['password']" class="error-message">{{ erros['password'] }}</span>
     </div>
 
     <!-- Esqueci minha senha -->
@@ -68,10 +68,10 @@
     <button
       type="submit"
       class="btn-login"
-      [disabled]="isLoading"
+      [disabled]="carregando"
     >
-      <div *ngIf="isLoading" class="spinner-small"></div>
-      <span>{{ isLoading ? 'Entrando...' : 'Entrar' }}</span>
+      <div *ngIf="carregando" class="spinner-small"></div>
+      <span>{{ carregando ? 'Entrando...' : 'Entrar' }}</span>
     </button>
   </form>
 

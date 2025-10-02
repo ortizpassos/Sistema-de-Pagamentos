@@ -15,15 +15,14 @@ export class LoginComponent {
   @Output() switchToRegister = new EventEmitter<void>();
   @Output() loginSuccess = new EventEmitter<void>();
 
-  loginData: UserLogin = {
+  dadosLogin: UserLogin = {
     email: '',
     password: ''
   };
-
-  isLoading = false;
-  showPassword = false;
-  errors: { [key: string]: string } = {};
-  generalError = '';
+  carregando = false;
+  mostrarSenha = false;
+  erros: { [key: string]: string } = {};
+  erroGeral = '';
 
   constructor(
     private authService: AuthService,
@@ -31,46 +30,44 @@ export class LoginComponent {
   ) {}
 
   onSubmit(): void {
-    if (!this.validateForm()) {
+    if (!this.validarFormulario()) {
       return;
     }
-
-    this.isLoading = true;
-    this.generalError = '';
-
-    this.authService.login(this.loginData).subscribe({
+    this.carregando = true;
+    this.erroGeral = '';
+    this.authService.login(this.dadosLogin).subscribe({
       next: (response) => {
         if (response.success) {
           this.loginSuccess.emit();
           this.router.navigate(['/dashboard']);
         } else {
-          this.generalError = response.error?.message || 'Erro ao fazer login';
+          this.erroGeral = response.error?.message || 'Erro ao fazer login';
         }
-        this.isLoading = false;
+        this.carregando = false;
       },
       error: (error) => {
-        this.generalError = error.error?.message || 'Erro ao conectar com o servidor';
-        this.isLoading = false;
+        this.erroGeral = error.error?.message || 'Erro ao conectar com o servidor';
+        this.carregando = false;
       }
     });
   }
 
-  validateForm(): boolean {
-    this.errors = {};
+  validarFormulario(): boolean {
+    this.erros = {};
     let isValid = true;
 
     // Validar email
-    if (!this.loginData.email) {
-      this.errors['email'] = 'Email é obrigatório';
+    if (!this.dadosLogin.email) {
+      this.erros['email'] = 'Email é obrigatório';
       isValid = false;
-    } else if (!this.authService.isEmailValid(this.loginData.email)) {
-      this.errors['email'] = 'Email inválido';
+    } else if (!this.authService.isEmailValid(this.dadosLogin.email)) {
+      this.erros['email'] = 'Email inválido';
       isValid = false;
     }
 
     // Validar senha
-    if (!this.loginData.password) {
-      this.errors['password'] = 'Senha é obrigatória';
+    if (!this.dadosLogin.password) {
+      this.erros['password'] = 'Senha é obrigatória';
       isValid = false;
     }
 
@@ -78,16 +75,16 @@ export class LoginComponent {
   }
 
   onInputChange(field: keyof UserLogin): void {
-    if (this.errors[field]) {
-      delete this.errors[field];
+    if (this.erros[field]) {
+      delete this.erros[field];
     }
-    if (this.generalError) {
-      this.generalError = '';
+    if (this.erroGeral) {
+      this.erroGeral = '';
     }
   }
 
   togglePasswordVisibility(): void {
-    this.showPassword = !this.showPassword;
+    this.mostrarSenha = !this.mostrarSenha;
   }
 
   onSwitchToRegister(): void {

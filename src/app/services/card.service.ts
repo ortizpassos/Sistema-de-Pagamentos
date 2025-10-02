@@ -27,7 +27,8 @@ export class CardService {
 
   // Salvar novo cartão
   saveCard(cardData: SaveCardRequest): Observable<SavedCardResponse> {
-    return this.http.post<SavedCardResponse>(`${this.apiUrl}`, cardData);
+    const payload = this.buildSavePayload(cardData);
+    return this.http.post<SavedCardResponse>(`${this.apiUrl}`, payload);
   }
 
   // Obter cartão específico
@@ -55,7 +56,7 @@ export class CardService {
     const errors: string[] = [];
 
     // Validar número do cartão
-    const cardNumber = cardData.cardNumber.replace(/\s/g, '');
+    const cardNumber = cardData.cardNumber.replace(/\D/g, '');
     if (!this.validateCardNumber(cardNumber)) {
       errors.push('Número do cartão inválido');
     }
@@ -63,6 +64,11 @@ export class CardService {
     // Validar nome do titular
     if (!cardData.cardHolderName.trim()) {
       errors.push('Nome do titular é obrigatório');
+    } else {
+      const normalized = this.normalizeName(cardData.cardHolderName);
+      if (!/^[A-Z ]{2,100}$/.test(normalized)) {
+        errors.push('Nome do titular deve conter apenas letras e espaços (sem acentos)');
+      }
     }
 
     // Validar data de expiração
@@ -88,6 +94,32 @@ export class CardService {
       isValid: errors.length === 0,
       errors
     };
+  }
+
+  // Montar payload sanitizado para envio
+  private buildSavePayload(data: SaveCardRequest) {
+    const number = data.cardNumber.replace(/\D/g, '');
+    const month = data.expirationMonth.padStart(2, '0');
+    const year = data.expirationYear.trim();
+    const name = this.normalizeName(data.cardHolderName);
+    return {
+      cardNumber: number,
+      cardHolderName: name,
+      expirationMonth: month,
+      expirationYear: year,
+      cvv: data.cvv.replace(/\D/g, ''),
+      isDefault: !!data.isDefault
+    };
+  }
+
+  // Normalizar nome (remover acentos e caracteres inválidos, uppercase)
+  private normalizeName(name: string): string {
+    return name
+      .normalize('NFD')
+      .replace(/[^A-Za-z\s]/g, '')
+      .toUpperCase()
+      .replace(/\s+/g, ' ')
+      .trim();
   }
 
   // Validar número do cartão usando algoritmo de Luhn

@@ -29,11 +29,12 @@ export class AuthService {
 
   // Registrar novo usuário
   register(userData: UserRegistration): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.apiUrl}/register`, userData)
+    const payload = this.sanitizeRegistrationData(userData);
+    return this.http.post<AuthResponse>(`${this.apiUrl}/register`, payload)
       .pipe(
         tap(response => {
           if (response.success && response.data) {
-            this.setAuth(response.data.user, response.data.token);
+            this.setAuth(response.data.user, response.data.token, response.data.refreshToken);
           }
         })
       );
@@ -45,7 +46,7 @@ export class AuthService {
       .pipe(
         tap(response => {
           if (response.success && response.data) {
-            this.setAuth(response.data.user, response.data.token);
+            this.setAuth(response.data.user, response.data.token, response.data.refreshToken);
           }
         })
       );
@@ -135,18 +136,21 @@ export class AuthService {
       .pipe(
         tap(response => {
           if (response.success && response.data) {
-            this.setAuth(response.data.user, response.data.token);
+            this.setAuth(response.data.user, response.data.token, response.data.refreshToken);
           }
         })
       );
   }
 
   // Métodos privados
-  private setAuth(user: User, token: string): void {
+  private setAuth(user: User, token: string, refreshToken?: string): void {
     this.currentUserSubject.next(user);
     this.tokenSubject.next(token);
     localStorage.setItem('auth_token', token);
     localStorage.setItem('current_user', JSON.stringify(user));
+    if (refreshToken) {
+      localStorage.setItem('refresh_token', refreshToken);
+    }
   }
 
   private clearAuth(): void {
@@ -190,5 +194,32 @@ export class AuthService {
     // Validação simples de CPF (11 dígitos)
     const cleanDoc = document.replace(/\D/g, '');
     return cleanDoc.length === 11;
+  }
+
+  // Sanitização dos dados de registro para evitar envio de campos vazios
+  private sanitizeRegistrationData(data: UserRegistration): any {
+    const payload: any = {
+      email: data.email?.trim().toLowerCase(),
+      password: data.password
+    };
+
+    if (data.firstName) payload.firstName = data.firstName.trim();
+    if (data.lastName) payload.lastName = data.lastName.trim();
+    if (data.phone) {
+      const phone = data.phone.replace(/\D/g, '');
+      if (phone.length >= 10) {
+        // Formato (99) 99999-9999 ou (99) 9999-9999
+        const isNine = phone.length === 11;
+        const ddd = phone.substring(0,2);
+        const part1 = isNine ? phone.substring(2,7) : phone.substring(2,6);
+        const part2 = isNine ? phone.substring(7) : phone.substring(6);
+        payload.phone = `(${ddd}) ${part1}-${part2}`;
+      }
+    }
+    if (data.document) {
+      const doc = data.document.replace(/\D/g, '');
+      if (doc.length === 11) payload.document = doc;
+    }
+    return payload;
   }
 }

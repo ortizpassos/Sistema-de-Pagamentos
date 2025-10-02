@@ -1,47 +1,94 @@
 <div class="dashboard-container">
   <header class="dashboard-header">
     <h1>Minha Conta</h1>
-    <button type="button" class="btn-logout">Sair</button>
+  <button type="button" class="btn-logout" (click)="sair()">Sair</button>
   </header>
 
   <div class="dashboard-content">
     <div class="dashboard-grid">
       <!-- Informações do Usuário -->
-      <div class="dashboard-card">
+  <div class="dashboard-card" *ngIf="usuario() as u">
         <h2>Perfil</h2>
         <div class="user-info">
           <div class="user-avatar">
-            <span>JD</span>
+            <span>{{ iniciais() }}</span>
           </div>
           <div class="user-details">
-            <h3>João da Silva</h3>
-            <p>joao@email.com</p>
-            <p>(11) 99999-9999</p>
+            <h3>{{ u.firstName }} {{ u.lastName }}</h3>
+            <p>{{ u.email }}</p>
+            <p *ngIf="u.phone">{{ u.phone }}</p>
+            <p class="verify-status" [class.verified]="u.isEmailVerified">
+              {{ u.isEmailVerified ? 'Email verificado' : 'Email não verificado' }}
+            </p>
           </div>
         </div>
-        <button type="button" class="btn-secondary">Editar Perfil</button>
+  <button type="button" class="btn-secondary" (click)="editarPerfil()">Editar Perfil</button>
       </div>
 
       <!-- Cartões Salvos -->
       <div class="dashboard-card">
         <h2>Cartões Salvos</h2>
-        <div class="saved-cards">
-          <div class="card-item">
-            <div class="card-info">
-              <span class="card-brand">Visa</span>
-              <span class="card-number">•••• •••• •••• 1234</span>
-            </div>
-            <button type="button" class="btn-remove">Remover</button>
+  <div *ngIf="carregandoCartoes(); else cardsBlock">Carregando...</div>
+        <ng-template #cardsBlock>
+          <div class="saved-cards empty" *ngIf="cartoes().length === 0 && !mostrarFormularioNovoCartao()">
+            <p class="empty-text">Nenhum cartão salvo ainda.</p>
           </div>
-          <div class="card-item">
-            <div class="card-info">
-              <span class="card-brand">Mastercard</span>
-              <span class="card-number">•••• •••• •••• 5678</span>
+          <div class="saved-cards" *ngIf="cartoes().length > 0">
+            <div class="card-item" *ngFor="let c of cartoes()">
+              <div class="card-info">
+                <span class="card-brand">{{ c.cardBrand | uppercase }} <span *ngIf="c.isDefault" class="default-badge">Padrão</span></span>
+                <span class="card-number">•••• •••• •••• {{ c.lastFourDigits }}</span>
+                <span class="card-exp">Exp: {{ c.expirationMonth }}/{{ c.expirationYear }}</span>
+              </div>
+              <div class="card-actions">
+                <button type="button" class="btn-mini" (click)="definirPadrao(c)" [disabled]="definindoPadraoId()===c.id || c.isDefault">
+                  {{ definindoPadraoId()===c.id ? '...' : c.isDefault ? 'Padrão' : 'Definir' }}
+                </button>
+                <button type="button" class="btn-remove" (click)="removerCartao(c)" [disabled]="removendoCartaoId()===c.id">
+                  {{ removendoCartaoId()===c.id ? '...' : 'Remover' }}
+                </button>
+              </div>
             </div>
-            <button type="button" class="btn-remove">Remover</button>
+          </div>
+        </ng-template>
+        <div *ngIf="mostrarFormularioNovoCartao()" class="add-card-form">
+          <h3>Novo Cartão</h3>
+          <div class="form-grid">
+            <div class="field">
+              <label>Número</label>
+              <input type="text" [(ngModel)]="novoCartao().cardNumber" name="cardNumber" (input)="formatarNumeroCartaoInput()" placeholder="#### #### #### ####" />
+            </div>
+            <div class="field">
+              <label>Nome Impresso</label>
+              <input type="text" [(ngModel)]="novoCartao().cardHolderName" name="cardHolderName" placeholder="EX: JOAO SILVA" />
+            </div>
+            <div class="field small">
+              <label>Mês</label>
+              <input type="text" maxlength="2" [(ngModel)]="novoCartao().expirationMonth" name="expirationMonth" placeholder="MM" />
+            </div>
+            <div class="field small">
+              <label>Ano</label>
+              <input type="text" maxlength="4" [(ngModel)]="novoCartao().expirationYear" name="expirationYear" placeholder="YYYY" />
+            </div>
+            <div class="field small">
+              <label>CVV</label>
+              <input type="password" maxlength="4" [(ngModel)]="novoCartao().cvv" name="cvv" placeholder="***" />
+            </div>
+            <div class="field inline">
+              <label>
+                <input type="checkbox" [(ngModel)]="novoCartao().isDefault" name="isDefault" /> Padrão
+              </label>
+            </div>
+          </div>
+          <div class="card-errors" *ngIf="errosCartao().length > 0">
+            <div class="error-line" *ngFor="let e of errosCartao()">{{ e }}</div>
+          </div>
+          <div class="actions">
+            <button type="button" class="btn-secondary" (click)="mostrarFormularioNovoCartao.set(false)" [disabled]="salvandoCartao()">Cancelar</button>
+            <button type="button" class="btn-primary" (click)="enviarNovoCartao()" [disabled]="salvandoCartao()">{{ salvandoCartao() ? 'Salvando...' : 'Salvar Cartão' }}</button>
           </div>
         </div>
-        <button type="button" class="btn-secondary">Adicionar Cartão</button>
+        <button *ngIf="!mostrarFormularioNovoCartao()" type="button" class="btn-secondary" (click)="abrirFormularioNovoCartao()">Adicionar Cartão</button>
       </div>
 
       <!-- Transações Recentes -->
@@ -80,15 +127,15 @@
       <div class="dashboard-card">
         <h2>Ações Rápidas</h2>
         <div class="quick-actions">
-          <button type="button" class="quick-action-btn">
+          <button type="button" class="quick-action-btn" (click)="novoPagamento()">
             <span class="action-icon">💳</span>
             <span>Novo Pagamento</span>
           </button>
-          <button type="button" class="quick-action-btn">
+          <button type="button" class="quick-action-btn" (click)="irParaRelatorios()">
             <span class="action-icon">📊</span>
             <span>Relatórios</span>
           </button>
-          <button type="button" class="quick-action-btn">
+          <button type="button" class="quick-action-btn" (click)="irParaConfiguracoes()">
             <span class="action-icon">⚙️</span>
             <span>Configurações</span>
           </button>
