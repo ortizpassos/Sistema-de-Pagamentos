@@ -6,8 +6,7 @@
   "scripts": {
     "prestart": "npm run build",
     "start": "node dist/app.js",
-  "dev": "nodemon src/app.ts",
-  "mock:card": "node mock-card-validation.js",
+    "dev": "nodemon src/app.ts",
     "build": "tsc",
     "test": "jest --runInBand",
     "test:watch": "jest --watch",
