@@ -7,6 +7,7 @@ import { DashboardComponent } from './pages/dashboard/dashboard';
 import { ReportsPage } from './pages/reports/reports';
 import { SettingsPage } from './pages/settings/settings';
 import { NewPaymentPage } from './pages/new-payment/new-payment';
+import { TransactionsPage } from './pages/transactions/transactions';
 import { AuthService } from './services/auth.service';
 
 // Guard de autenticação
@@ -25,6 +26,7 @@ export const routes: Routes = [
   { path: 'payment/:transactionId', component: PaymentComponent },
   { path: 'novo-pagamento', component: NewPaymentPage, canActivate: [authGuard] },
   { path: 'relatorios', component: ReportsPage, canActivate: [authGuard] },
+  { path: 'transacoes', component: TransactionsPage, canActivate: [authGuard] },
   { path: 'configuracoes', component: SettingsPage, canActivate: [authGuard] },
   { path: '**', redirectTo: '' }
 ];

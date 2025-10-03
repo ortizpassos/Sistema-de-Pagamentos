@@ -43,14 +43,24 @@ class App {
     initializeMiddlewares() {
         this.app.set('trust proxy', 1);
         this.app.use((0, helmet_1.default)());
-        const allowedOrigins = env_1.env.frontendUrls.length ? env_1.env.frontendUrls : ['http://localhost:4200'];
+        const rawOrigins = (env_1.env.frontendUrls && env_1.env.frontendUrls.length)
+            ? env_1.env.frontendUrls
+            : ['https://sistema-de-pagamentos.onrender.com', 'http://localhost:4200'];
+        const allowedOrigins = rawOrigins
+            .map(o => o.trim())
+            .filter(Boolean)
+            .map(o => o.replace(/\/$/, '').toLowerCase());
         this.app.use((0, cors_1.default)({
             origin: (origin, cb) => {
                 if (!origin)
                     return cb(null, true);
-                if (allowedOrigins.includes(origin))
+                const clean = origin.replace(/\/$/, '').toLowerCase();
+                if (allowedOrigins.includes(clean))
                     return cb(null, true);
-                return cb(new Error('CORS_NOT_ALLOWED'));
+                if (!env_1.env.isProd) {
+                    console.warn('[CORS] Origin bloqueada:', origin, 'Permitidas:', allowedOrigins.join(', '));
+                }
+                return cb(null, false);
             },
             credentials: true,
             methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],

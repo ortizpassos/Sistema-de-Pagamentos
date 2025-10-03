@@ -28,6 +28,13 @@ export declare const env: {
         autoLoginAfterRegister: boolean;
         passwordlessRegister: boolean;
     };
+    externalCardApi: {
+        url: string;
+        key: string;
+        timeoutMs: number;
+        enabled: boolean;
+        debug: boolean;
+    };
     logLevel: string;
 };
 //# sourceMappingURL=env.d.ts.map

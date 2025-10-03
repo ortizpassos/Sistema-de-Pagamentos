@@ -35,12 +35,16 @@ class AuthController {
             await user.save();
             const verificationToken = user.generateEmailVerificationToken();
             await user.save();
-            try {
-                await email_service_1.emailService.sendVerificationEmail(email, verificationToken, firstName);
-            }
-            catch (error) {
-                console.error('Failed to send verification email:', error);
-            }
+            (async () => {
+                try {
+                    await email_service_1.emailService.sendVerificationEmail(email, verificationToken, firstName);
+                    if (!env_1.env.isProd)
+                        console.log('[register] verification email queued/sent');
+                }
+                catch (error) {
+                    console.error('[register] Failed to send verification email (non-blocking):', error);
+                }
+            })();
             if (env_1.env.features.autoLoginAfterRegister) {
                 const { accessToken, refreshToken } = (0, auth_1.generateTokens)(user._id, user.email);
                 const freshUser = await User_1.User.findById(user._id).select('+refreshTokens');
@@ -60,16 +64,21 @@ class AuthController {
                 res.status(201).json(response);
                 return;
             }
+            const { accessToken, refreshToken } = (0, auth_1.generateTokens)(user._id, user.email);
+            user.refreshTokens.push(refreshToken);
+            await user.save();
             const response = {
                 success: true,
                 data: {
                     user: user.toJSON(),
-                    token: '',
-                    refreshToken: '',
-                    expiresIn: 0
+                    token: accessToken,
+                    refreshToken,
+                    expiresIn: 3600
                 }
             };
             res.status(201).json(response);
+            if (!env_1.env.isProd)
+                console.log('[register] user created and response sent:', user.email);
         });
         this.login = (0, errorHandler_1.asyncHandler)(async (req, res) => {
             const { email, password } = req.body;

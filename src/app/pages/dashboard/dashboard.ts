@@ -7,6 +7,8 @@ import { CardService } from '../../services/card.service';
 import { FormsModule } from '@angular/forms';
 import { SavedCard, SaveCardRequest } from '../../models/user.model';
 import { PaymentService } from '../../services/payment.service';
+import { Transaction } from '../../models/transaction.model';
+import { mapExternalCardReason } from '../../shared/utils/external-reason.util';
 import { PaymentInitiateRequest } from '../../models/transaction.model';
 
 @Component({
@@ -31,6 +33,8 @@ export class DashboardComponent {
   salvandoCartao = signal(false);
   removendoCartaoId = signal<string | null>(null);
   definindoPadraoId = signal<string | null>(null);
+  transacoesRecentes = signal<Transaction[]>([]);
+  carregandoTransacoes = signal(false);
 
   novoCartao = signal<SaveCardRequest>({
     cardNumber: '',
@@ -43,12 +47,13 @@ export class DashboardComponent {
 
   constructor(
     private auth: AuthService,
-    private router: Router,
+    public router: Router,
     private cardService: CardService,
-    private paymentService: PaymentService
+    public paymentService: PaymentService
   ) {
     this.usuario.set(this.auth.getCurrentUser());
     this.carregarCartoes();
+    this.carregarTransacoesRecentes();
   }
 
   sair(): void {
@@ -62,7 +67,7 @@ export class DashboardComponent {
   }
 
   editarPerfil(): void {
-    // Placeholder para futura edição de perfil
+    this.router.navigate(['/perfil']);
   }
 
   carregarCartoes(): void {
@@ -101,16 +106,20 @@ export class DashboardComponent {
     this.cardService.saveCard({ ...dados }).subscribe({
       next: (resp) => {
         if (resp.success && resp.data) {
+          // Sucesso somente se backend validou externamente (backend já bloqueia salvar se inválido)
           this.carregarCartoes();
           this.novoCartao.set({ cardNumber: '', cardHolderName: '', expirationMonth: '', expirationYear: '', cvv: '', isDefault: false });
           this.mostrarFormularioNovoCartao.set(false);
         } else {
-          this.errosCartao.set([resp.error?.message || 'Falha ao salvar cartão']);
+          const friendly = mapExternalCardReason(resp.error?.message) || resp.error?.message || 'Falha ao salvar cartão';
+            this.errosCartao.set([friendly]);
         }
         this.salvandoCartao.set(false);
       },
       error: (err) => {
-        this.errosCartao.set([err.error?.error?.message || err.error?.message || 'Erro inesperado']);
+        const raw = err.error?.error?.message || err.error?.message || 'Erro inesperado';
+        const friendly = mapExternalCardReason(raw) || raw;
+        this.errosCartao.set([friendly]);
         this.salvandoCartao.set(false);
       }
     });
@@ -141,6 +150,49 @@ export class DashboardComponent {
         this.definindoPadraoId.set(null);
       }
     });
+  }
+
+  // ===== Transações Recentes =====
+  carregarTransacoesRecentes(limit = 5): void {
+    this.carregandoTransacoes.set(true);
+    this.paymentService.getRecentTransactions(limit).subscribe({
+      next: (resp) => {
+        if (resp.success && resp.data?.transactions) {
+          this.transacoesRecentes.set(resp.data.transactions as Transaction[]);
+        } else {
+          this.transacoesRecentes.set([]);
+        }
+        this.carregandoTransacoes.set(false);
+      },
+      error: () => {
+        this.transacoesRecentes.set([]);
+        this.carregandoTransacoes.set(false);
+      }
+    });
+  }
+
+  formatStatus(status: string): string {
+    const map: Record<string,string> = {
+      'PENDING': 'Pendente',
+      'PROCESSING': 'Processando',
+      'APPROVED': 'Aprovado',
+      'DECLINED': 'Recusado',
+      'FAILED': 'Falhou',
+      'EXPIRED': 'Expirado'
+    };
+    return map[status] || status;
+  }
+
+  statusClass(status: string): string {
+    if (status === 'APPROVED') return 'success';
+    if (status === 'PENDING' || status === 'PROCESSING') return 'pending';
+    return 'error';
+  }
+
+  descricaoTransacao(t: Transaction): string {
+    if (t.paymentMethod === 'credit_card') return 'Pagamento Cartão';
+    if (t.paymentMethod === 'pix') return 'Pagamento PIX';
+    return 'Transação';
   }
 
   // ===== Ações Rápidas =====

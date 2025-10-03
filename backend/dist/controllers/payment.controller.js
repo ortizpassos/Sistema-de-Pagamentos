@@ -6,6 +6,21 @@ const paymentGateway_service_1 = require("../services/paymentGateway.service");
 const errorHandler_1 = require("../middleware/errorHandler");
 class PaymentController {
     constructor() {
+        this.recentTransactions = (0, errorHandler_1.asyncHandler)(async (req, res) => {
+            const user = req.user;
+            const limit = Math.min(parseInt(req.query.limit || '5', 10), 20);
+            const transactions = await Transaction_1.Transaction.find({ userId: user._id })
+                .sort({ createdAt: -1 })
+                .limit(limit)
+                .select('orderId amount currency paymentMethod status createdAt updatedAt recipientUserId recipientPixKey installments');
+            res.json({
+                success: true,
+                data: {
+                    transactions: transactions.map(t => t.toJSON()),
+                    limit
+                }
+            });
+        });
         this.initiatePayment = (0, errorHandler_1.asyncHandler)(async (req, res) => {
             const { orderId, amount, currency, paymentMethod, customer, returnUrl, callbackUrl, recipientUserId, recipientPixKey, installments } = req.body;
             const user = req.user;
@@ -245,7 +260,7 @@ class PaymentController {
         });
         this.getTransactionHistory = (0, errorHandler_1.asyncHandler)(async (req, res) => {
             const user = req.user;
-            const { page = 1, limit = 10, status, paymentMethod } = req.query;
+            const { page = 1, limit = 10, status, paymentMethod, sort = 'createdAt', direction = 'desc' } = req.query;
             const pageNumber = parseInt(page);
             const limitNumber = parseInt(limit);
             const skip = (pageNumber - 1) * limitNumber;
@@ -256,9 +271,12 @@ class PaymentController {
             if (paymentMethod) {
                 query.paymentMethod = paymentMethod;
             }
+            const allowedSort = new Set(['createdAt', 'amount', 'status', 'paymentMethod']);
+            const sortField = allowedSort.has(String(sort)) ? String(sort) : 'createdAt';
+            const sortDir = String(direction).toLowerCase() === 'asc' ? 1 : -1;
             const [transactions, total] = await Promise.all([
                 Transaction_1.Transaction.find(query)
-                    .sort({ createdAt: -1 })
+                    .sort({ [sortField]: sortDir })
                     .skip(skip)
                     .limit(limitNumber),
                 Transaction_1.Transaction.countDocuments(query)
@@ -272,7 +290,9 @@ class PaymentController {
                         limit: limitNumber,
                         total,
                         pages: Math.ceil(total / limitNumber)
-                    }
+                    },
+                    sort: sortField,
+                    direction: sortDir === 1 ? 'asc' : 'desc'
                 }
             };
             res.json(response);

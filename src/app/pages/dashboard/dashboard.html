@@ -94,33 +94,23 @@
       <!-- Transações Recentes -->
       <div class="dashboard-card full-width">
         <h2>Transações Recentes</h2>
-        <div class="transactions-list">
-          <div class="transaction-item">
-            <div class="transaction-info">
-              <span class="transaction-description">Pagamento - Loja Online</span>
-              <span class="transaction-date">15/01/2024</span>
+        <div *ngIf="carregandoTransacoes(); else listaTransacoes">Carregando...</div>
+        <ng-template #listaTransacoes>
+          <div class="transactions-list" *ngIf="transacoesRecentes().length > 0; else vazioTransacoes">
+            <div class="transaction-item" *ngFor="let t of transacoesRecentes()">
+              <div class="transaction-info">
+                <span class="transaction-description">{{ descricaoTransacao(t) }}</span>
+                <span class="transaction-date">{{ t.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
+              </div>
+              <span class="transaction-amount">{{ paymentService.formatCurrency(t.amount, t.currency) }}</span>
+              <span class="transaction-status" [class]="'transaction-status ' + statusClass(t.status)">{{ formatStatus(t.status) }}</span>
             </div>
-            <span class="transaction-amount">R$ 159,90</span>
-            <span class="transaction-status success">Aprovado</span>
           </div>
-          <div class="transaction-item">
-            <div class="transaction-info">
-              <span class="transaction-description">Transferência PIX</span>
-              <span class="transaction-date">14/01/2024</span>
-            </div>
-            <span class="transaction-amount">R$ 250,00</span>
-            <span class="transaction-status success">Aprovado</span>
-          </div>
-          <div class="transaction-item">
-            <div class="transaction-info">
-              <span class="transaction-description">Compra Online</span>
-              <span class="transaction-date">12/01/2024</span>
-            </div>
-            <span class="transaction-amount">R$ 89,50</span>
-            <span class="transaction-status pending">Processando</span>
-          </div>
-        </div>
-        <button type="button" class="btn-secondary">Ver Todas</button>
+          <ng-template #vazioTransacoes>
+            <p class="empty-text">Nenhuma transação recente.</p>
+          </ng-template>
+        </ng-template>
+        <button type="button" class="btn-secondary" (click)="router.navigate(['/transacoes'])">Ver Todas</button>
       </div>
 
       <!-- Ações Rápidas -->

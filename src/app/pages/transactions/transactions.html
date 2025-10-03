@@ -1,0 +1,74 @@
+<div class="transactions-page">
+  <h1>Transações</h1>
+  <div class="filters">
+    <label>
+      Status:
+      <select [(ngModel)]="filtroStatus" (change)="aplicarFiltros()">
+        <option value="">Todos</option>
+        <option *ngFor="let s of statusOptions" [value]="s.value">{{ s.label }}</option>
+      </select>
+    </label>
+    <label>
+      Método:
+      <select [(ngModel)]="filtroMetodo" (change)="aplicarFiltros()">
+        <option value="">Todos</option>
+        <option value="credit_card">Cartão</option>
+        <option value="pix">PIX</option>
+      </select>
+    </label>
+    <div class="actions-inline">
+      <button class="btn-secondary" type="button" (click)="exportarCsv()">Exportar CSV</button>
+    </div>
+  </div>
+
+  <div class="summary" *ngIf="pagination().total > 0">
+    Mostrando {{ transacoes().length }} de {{ pagination().total }} registros (Página {{ pagination().page }} / {{ pagination().pages }})
+  </div>
+
+  <div *ngIf="carregando(); else lista" class="loading">Carregando...</div>
+  <ng-template #lista>
+    <div *ngIf="transacoes().length === 0" class="empty">Nenhuma transação encontrada.</div>
+    <table *ngIf="transacoes().length > 0" class="transactions-table">
+      <thead>
+        <tr>
+          <th (click)="ordenar('createdAt')">Data {{ indicadorOrdenacao('createdAt') }}</th>
+          <th (click)="ordenar('orderId')">Order</th>
+          <th (click)="ordenar('paymentMethod')">Método {{ indicadorOrdenacao('paymentMethod') }}</th>
+          <th (click)="ordenar('amount')">Valor {{ indicadorOrdenacao('amount') }}</th>
+          <th>Base</th>
+          <th>Juros</th>
+          <th>Parcelas</th>
+          <th (click)="ordenar('status')">Status {{ indicadorOrdenacao('status') }}</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let t of transacoes()">
+          <td>{{ t.createdAt | date:'dd/MM/yyyy HH:mm' }}</td>
+          <td>{{ t.orderId }}</td>
+          <td>{{ metodoLabel(t.paymentMethod) }}</td>
+          <td>{{ paymentService.formatCurrency(t.amount, t.currency) }}</td>
+          <td>{{ t.baseAmount ? paymentService.formatCurrency(t.baseAmount, t.currency) : '-' }}</td>
+          <td>
+            <ng-container *ngIf="jurosValor(t) as jv; else semjuros">
+              {{ paymentService.formatCurrency(jv, t.currency) }}
+              <span *ngIf="jurosPercent(t) as jp" class="interest-percent">({{ jp }})</span>
+            </ng-container>
+            <ng-template #semjuros>-</ng-template>
+          </td>
+          <td>{{ parcelasResumo(t) || '-' }}</td>
+          <td><span class="status-badge" [class]="'status-badge ' + statusClass(t.status)">{{ statusLabel(t.status) }}</span></td>
+          <td><button class="btn-link" (click)="verDetalhe(t)">Detalhe</button></td>
+        </tr>
+      </tbody>
+    </table>
+  </ng-template>
+
+  <div class="pagination" *ngIf="pagination().pages > 1">
+    <button (click)="mudarPagina(pagination().page - 1)" [disabled]="pagination().page === 1">Anterior</button>
+    <span>Página {{ pagination().page }} de {{ pagination().pages }}</span>
+    <button (click)="mudarPagina(pagination().page + 1)" [disabled]="pagination().page === pagination().pages">Próxima</button>
+  </div>
+
+  <button class="btn-secondary" (click)="voltarDashboard()">Voltar</button>
+</div>

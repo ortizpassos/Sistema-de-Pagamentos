@@ -8,12 +8,13 @@ import {
   PaymentResponse,
   PaymentInitiateRequest 
 } from '../models/transaction.model';
+import { getApiBase } from '../config/api.config';
 
 @Injectable({
   providedIn: 'root'
 })
 export class PaymentService {
-  private apiUrl = 'https://sistema-de-pagamentos-backend.onrender.com/api'; // URL do backend
+  private apiUrl = getApiBase(); // Dinâmico (local ou produção)
 
   constructor(private http: HttpClient) {}
 
@@ -40,6 +41,24 @@ export class PaymentService {
   // Obter transação por ID
   getTransaction(transactionId: string): Observable<Transaction> {
     return this.http.get<Transaction>(`${this.apiUrl}/payments/${transactionId}`);
+  }
+
+  // Obter transações recentes
+  getRecentTransactions(limit = 5): Observable<{ success: boolean; data?: { transactions: Transaction[] } }> {
+    return this.http.get<{ success: boolean; data?: { transactions: Transaction[] } }>(`${this.apiUrl}/payments/recent?limit=${limit}`);
+  }
+
+  // Histórico paginado de transações
+  getTransactionHistory(options: { page?: number; limit?: number; status?: string; paymentMethod?: string; sort?: string; direction?: 'asc'|'desc' } = {}): Observable<{ success: boolean; data?: { transactions: Transaction[]; pagination: any; sort: string; direction: string } }> {
+    const params = new URLSearchParams();
+    if (options.page) params.append('page', String(options.page));
+    if (options.limit) params.append('limit', String(options.limit));
+    if (options.status) params.append('status', options.status);
+    if (options.paymentMethod) params.append('paymentMethod', options.paymentMethod);
+    if (options.sort) params.append('sort', options.sort);
+    if (options.direction) params.append('direction', options.direction);
+    const qs = params.toString();
+    return this.http.get<{ success: boolean; data?: { transactions: Transaction[]; pagination: any; sort: string; direction: string } }>(`${this.apiUrl}/payments${qs ? '?' + qs : ''}`);
   }
 
   // Validação de cartão de crédito usando algoritmo de Luhn

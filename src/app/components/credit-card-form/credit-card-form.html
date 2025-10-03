@@ -10,6 +10,19 @@
   </div>
   
   <div class="card-content">
+    <!-- Mensagens externas -->
+    @if (externalMessage) {
+      <div class="alert alert-success mb-4">
+        <div class="alert-icon"></div>
+        <span>{{ externalMessage }}</span>
+      </div>
+    }
+    @if (externalError) {
+      <div class="alert alert-error mb-4">
+        <div class="alert-icon"></div>
+        <span>{{ externalError }}</span>
+      </div>
+    }
     <form (ngSubmit)="onSubmit()" class="space-y-4">
       <!-- Número do Cartão -->
       <div class="space-y-2">
@@ -23,7 +36,9 @@
           maxlength="23"
           [class]="'input ' + (errors['cardNumber'] ? 'border-error' : '')"
         />
-        <p *ngIf="errors['cardNumber']" class="error-text">{{ errors['cardNumber'] }}</p>
+        @if (errors['cardNumber']) {
+          <p class="error-text">{{ errors['cardNumber'] }}</p>
+        }
       </div>
 
       <!-- Nome do Titular -->
@@ -37,7 +52,9 @@
           (input)="onInputChange('cardHolderName', $any($event.target).value)"
           [class]="'input ' + (errors['cardHolderName'] ? 'border-error' : '')"
         />
-        <p *ngIf="errors['cardHolderName']" class="error-text">{{ errors['cardHolderName'] }}</p>
+        @if (errors['cardHolderName']) {
+          <p class="error-text">{{ errors['cardHolderName'] }}</p>
+        }
       </div>
 
       <!-- Validade -->
@@ -54,7 +71,9 @@
             (input)="onInputChange('expirationMonth', $any($event.target).value)"
             [class]="'input ' + (errors['expirationMonth'] ? 'border-error' : '')"
           />
-          <p *ngIf="errors['expirationMonth']" class="error-text">{{ errors['expirationMonth'] }}</p>
+          @if (errors['expirationMonth']) {
+            <p class="error-text">{{ errors['expirationMonth'] }}</p>
+          }
         </div>
         
         <div class="space-y-2">
@@ -69,14 +88,17 @@
             (input)="onInputChange('expirationYear', $any($event.target).value)"
             [class]="'input ' + (errors['expirationYear'] ? 'border-error' : '')"
           />
-          <p *ngIf="errors['expirationYear']" class="error-text">{{ errors['expirationYear'] }}</p>
+          @if (errors['expirationYear']) {
+            <p class="error-text">{{ errors['expirationYear'] }}</p>
+          }
         </div>
       </div>
-
-      <div *ngIf="errors['expirationDate']" class="alert alert-error">
-        <div class="alert-icon"></div>
-        <p>{{ errors['expirationDate'] }}</p>
-      </div>
+      @if (errors['expirationDate']) {
+        <div class="alert alert-error">
+          <div class="alert-icon"></div>
+          <p>{{ errors['expirationDate'] }}</p>
+        </div>
+      }
 
       <!-- CVV -->
       <div class="space-y-2">
@@ -90,7 +112,9 @@
           (input)="onInputChange('cvv', $any($event.target).value)"
           [class]="'input ' + (errors['cvv'] ? 'border-error' : '')"
         />
-        <p *ngIf="errors['cvv']" class="error-text">{{ errors['cvv'] }}</p>
+        @if (errors['cvv']) {
+          <p class="error-text">{{ errors['cvv'] }}</p>
+        }
       </div>
 
       <!-- Informação de Segurança -->

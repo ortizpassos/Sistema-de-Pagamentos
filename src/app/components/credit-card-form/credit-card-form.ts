@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PaymentService } from '../../services/payment.service';
 import { Transaction, CreditCardPaymentRequest } from '../../models/transaction.model';
+import { mapExternalCardReason } from '../../shared/utils/external-reason.util';
 
 interface FormData {
   cardNumber: string;
@@ -38,6 +39,8 @@ export class CreditCardFormComponent {
   errors: FormErrors = {};
   isLoading = false;
   currentYear = new Date().getFullYear();
+  externalMessage: string | null = null;
+  externalError: string | null = null;
 
   constructor(public paymentService: PaymentService) {}
 
@@ -122,6 +125,8 @@ export class CreditCardFormComponent {
     }
 
     this.isLoading = true;
+    this.externalMessage = null;
+    this.externalError = null;
 
     const creditCardData: CreditCardPaymentRequest = {
       transactionId: this.transaction.id,
@@ -135,14 +140,20 @@ export class CreditCardFormComponent {
     this.paymentService.processCreditCardPayment(creditCardData).subscribe({
       next: (response) => {
         if (response.success && response.data) {
+          // Exibir confirmação simples (para consistência com validação externa de cartão salvo)
+          this.externalMessage = 'Pagamento autorizado com sucesso.';
           this.success.emit(response.data);
         } else {
-          this.error.emit(response.error?.message || 'Erro ao processar pagamento');
+          const msg = response.error?.message || 'Erro ao processar pagamento';
+          this.externalError = this.mapExternalReason(msg);
+          this.error.emit(msg);
         }
         this.isLoading = false;
       },
       error: (error) => {
-        this.error.emit(error.message || 'Erro ao processar pagamento');
+        const raw = error.error?.error?.message || error.error?.message || error.message || 'Erro ao processar pagamento';
+        this.externalError = this.mapExternalReason(raw);
+        this.error.emit(raw);
         this.isLoading = false;
       }
     });
@@ -151,4 +162,6 @@ export class CreditCardFormComponent {
   getCardBrand(): string {
     return this.paymentService.getCardBrand(this.formData.cardNumber);
   }
+
+  private mapExternalReason(message: string): string { return mapExternalCardReason(message) || message; }
 }

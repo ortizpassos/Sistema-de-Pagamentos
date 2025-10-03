@@ -12,6 +12,7 @@
     "test:watch": "jest --watch",
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix"
+    ,"mock:card": "node mock-card-validation.js"
   },
   "keywords": ["payments", "api", "typescript", "mongodb"],
   "author": "Eduardo",
@@ -29,7 +30,8 @@
     "express-rate-limit": "^7.1.5",
     "uuid": "^9.0.1",
     "crypto": "^1.0.1",
-    "qrcode": "^1.5.3"
+    "qrcode": "^1.5.3",
+    "axios": "^1.6.0"
   },
   "devDependencies": {
     "@types/express": "^4.17.21",
@@ -51,8 +53,10 @@
     "ts-jest": "^29.1.1",
     "supertest": "^6.3.3",
     "@types/supertest": "^2.0.16",
-    "mongodb-memory-server": "^10.1.4"
+    "mongodb-memory-server": "^10.1.4",
+    "@types/axios": "^0.14.0"
   },
+  "optionalDependencies": {},
   "jest": {
     "preset": "ts-jest",
     "testEnvironment": "node",

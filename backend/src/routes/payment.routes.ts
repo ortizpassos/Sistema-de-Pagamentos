@@ -16,6 +16,9 @@ router.use(authenticate);
 // Payment initiation
 router.post('/initiate', validatePayment(initiatePaymentSchema), paymentController.initiatePayment);
 
+// Recent transactions (must come before /:transactionId)
+router.get('/recent', paymentController.recentTransactions);
+
 // Payment processing
 router.post('/credit-card', validatePayment(creditCardPaymentSchema), paymentController.processCreditCardPayment);
 router.post('/pix', validatePayment(pixPaymentSchema), paymentController.processPixPayment);

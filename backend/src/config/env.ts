@@ -52,6 +52,14 @@ export const env = {
     passwordlessRegister: process.env.PASSWORDLESS_REGISTER === 'true'
   },
 
+  externalCardApi: {
+    url: process.env.EXTERNAL_CARD_API_URL || '',
+    key: process.env.EXTERNAL_CARD_API_KEY || '',
+    timeoutMs: toNumber(process.env.EXTERNAL_CARD_API_TIMEOUT_MS, 4000),
+    enabled: process.env.EXTERNAL_CARD_API_ENABLED === 'true',
+    debug: process.env.EXTERNAL_CARD_API_DEBUG === 'true'
+  },
+
   logLevel: process.env.LOG_LEVEL || 'info'
 };
 
@@ -61,4 +69,7 @@ if (!env.mongoUri) {
 }
 if (!env.encryptionKey || env.encryptionKey.length !== 32) {
   console.warn('[WARN] ENCRYPTION_KEY must be exactly 32 characters. Current length:', env.encryptionKey.length);
+}
+if (env.externalCardApi.enabled && !env.externalCardApi.url) {
+  console.warn('[WARN] EXTERNAL_CARD_API_ENABLED=true mas EXTERNAL_CARD_API_URL não foi definido');
 }

@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { SavedCard, SaveCardRequest } from '../models/user.model';
+import { getApiBase } from '../config/api.config';
 
 export interface SavedCardResponse {
   success: boolean;
@@ -16,7 +17,7 @@ export interface SavedCardResponse {
   providedIn: 'root'
 })
 export class CardService {
-  private apiUrl = 'https://sistema-de-pagamentos-backend.onrender.com/api/cards';
+  private apiUrl = `${getApiBase()}/cards`;
 
   constructor(private http: HttpClient) {}
 

@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { map, Observable } from 'rxjs';
+import { getApiBase } from '../config/api.config';
 
 export interface UserOption {
   id: string;
@@ -15,7 +16,7 @@ interface LookupResponse { success: boolean; data: UserOption | null; }
 export class UserService {
   private http = inject(HttpClient);
   // URL absoluta apontando para backend em produção
-  private api = 'https://sistema-de-pagamentos-backend.onrender.com/api/users';
+  private api = `${getApiBase()}/users`;
 
   search(term: string): Observable<UserOption[]> {
     const q = term?.trim();

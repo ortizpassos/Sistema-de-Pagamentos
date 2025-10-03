@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 declare class PaymentController {
+    recentTransactions: (req: Request, res: Response, next: import("express").NextFunction) => void;
     initiatePayment: (req: Request, res: Response, next: import("express").NextFunction) => void;
     processCreditCardPayment: (req: Request, res: Response, next: import("express").NextFunction) => void;
     processPixPayment: (req: Request, res: Response, next: import("express").NextFunction) => void;

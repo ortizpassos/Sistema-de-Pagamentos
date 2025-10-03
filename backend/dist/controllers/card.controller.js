@@ -5,6 +5,7 @@ const SavedCard_1 = require("../models/SavedCard");
 const encryption_service_1 = require("../services/encryption.service");
 const paymentValidation_1 = require("../utils/paymentValidation");
 const errorHandler_1 = require("../middleware/errorHandler");
+const externalCardValidation_service_1 = require("../services/externalCardValidation.service");
 class CardController {
     constructor() {
         this.getUserCards = (0, errorHandler_1.asyncHandler)(async (req, res) => {
@@ -38,6 +39,30 @@ class CardController {
                 if (existingCard) {
                     throw new errorHandler_1.AppError('Este cartão já está salvo', 400, 'CARD_ALREADY_EXISTS');
                 }
+                const externalResult = await externalCardValidation_service_1.externalCardValidationService.validate({
+                    cardNumber,
+                    cardHolderName,
+                    expirationMonth,
+                    expirationYear,
+                    cvv,
+                    user: {
+                        id: user._id.toString(),
+                        email: user.email,
+                        firstName: user.firstName,
+                        lastName: user.lastName
+                    }
+                });
+                if (process.env.EXTERNAL_CARD_API_DEBUG === 'true') {
+                    console.log('[CARD_CONTROLLER][EXTERNAL_RESULT]', {
+                        valid: externalResult.valid,
+                        reason: externalResult.reason,
+                        provider: externalResult.provider,
+                        latency: externalResult.networkLatencyMs
+                    });
+                }
+                if (!externalResult.valid) {
+                    throw new errorHandler_1.AppError(`Cartão rejeitado pela validação externa${externalResult.reason ? ': ' + externalResult.reason : ''}`, 422, 'EXTERNAL_CARD_VALIDATION_FAILED');
+                }
                 const tokenizedCard = encryption_service_1.encryptionService.tokenizeCard({
                     cardNumber,
                     cardHolderName,
@@ -60,7 +85,7 @@ class CardController {
                     success: true,
                     data: {
                         card: savedCard.toJSON(),
-                        message: 'Cartão salvo com sucesso'
+                        message: 'Cartão salvo com sucesso (validado externamente)'
                     }
                 };
                 res.status(201).json(response);

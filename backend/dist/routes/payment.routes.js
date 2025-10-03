@@ -8,6 +8,7 @@ const paymentValidation_2 = require("../utils/paymentValidation");
 const router = (0, express_1.Router)();
 router.use(auth_1.authenticate);
 router.post('/initiate', (0, paymentValidation_1.validatePayment)(paymentValidation_2.initiatePaymentSchema), payment_controller_1.paymentController.initiatePayment);
+router.get('/recent', payment_controller_1.paymentController.recentTransactions);
 router.post('/credit-card', (0, paymentValidation_1.validatePayment)(paymentValidation_2.creditCardPaymentSchema), payment_controller_1.paymentController.processCreditCardPayment);
 router.post('/pix', (0, paymentValidation_1.validatePayment)(paymentValidation_2.pixPaymentSchema), payment_controller_1.paymentController.processPixPayment);
 router.get('/pix/:transactionId/status', payment_controller_1.paymentController.checkPixStatus);

@@ -4,6 +4,7 @@ import { User, IUser } from '../models/User';
 import { encryptionService } from '../services/encryption.service';
 import { getCardBrand } from '../utils/paymentValidation';
 import { AppError, asyncHandler } from '../middleware/errorHandler';
+import { externalCardValidationService } from '../services/externalCardValidation.service';
 
 interface CardResponse {
   success: boolean;
@@ -61,6 +62,38 @@ class CardController {
         throw new AppError('Este cartão já está salvo', 400, 'CARD_ALREADY_EXISTS');
       }
 
+      // Validação externa do cartão (se feature habilitada)
+      const externalResult = await externalCardValidationService.validate({
+        cardNumber,
+        cardHolderName,
+        expirationMonth,
+        expirationYear,
+        cvv,
+        user: {
+          id: user._id.toString(),
+          email: user.email,
+          firstName: (user as any).firstName,
+          lastName: (user as any).lastName
+        }
+      });
+
+      if (process.env.EXTERNAL_CARD_API_DEBUG === 'true') {
+        console.log('[CARD_CONTROLLER][EXTERNAL_RESULT]', {
+          valid: externalResult.valid,
+          reason: externalResult.reason,
+          provider: externalResult.provider,
+          latency: externalResult.networkLatencyMs
+        });
+      }
+
+      if (!externalResult.valid) {
+        throw new AppError(
+          `Cartão rejeitado pela validação externa${externalResult.reason ? ': ' + externalResult.reason : ''}`,
+          422,
+          'EXTERNAL_CARD_VALIDATION_FAILED'
+        );
+      }
+
       const tokenizedCard = encryptionService.tokenizeCard({
         cardNumber,
         cardHolderName,
@@ -86,7 +119,7 @@ class CardController {
         success: true,
         data: {
           card: savedCard.toJSON(),
-          message: 'Cartão salvo com sucesso'
+          message: 'Cartão salvo com sucesso (validado externamente)'
         }
       };
       res.status(201).json(response);

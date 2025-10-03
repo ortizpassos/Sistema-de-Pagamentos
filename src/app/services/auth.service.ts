@@ -11,12 +11,13 @@ import {
   ForgotPassword,
   ResetPassword
 } from '../models/user.model';
+import { getApiBase } from '../config/api.config';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = 'https://sistema-de-pagamentos-backend.onrender.com/api/auth';
+  private apiUrl = `${getApiBase()}/auth`;
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   private tokenSubject = new BehaviorSubject<string | null>(null);
 

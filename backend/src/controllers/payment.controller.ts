@@ -15,6 +15,23 @@ interface PaymentResponse {
 }
 
 class PaymentController {
+  // Get recent transactions (lightweight list)
+  recentTransactions = asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const user = req.user as IUser;
+    const limit = Math.min(parseInt((req.query.limit as string) || '5', 10), 20); // hard cap 20
+    const transactions = await Transaction.find({ userId: user._id })
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .select('orderId amount currency paymentMethod status createdAt updatedAt recipientUserId recipientPixKey installments');
+
+    res.json({
+      success: true,
+      data: {
+        transactions: transactions.map(t => t.toJSON()),
+        limit
+      }
+    });
+  });
   // Initiate a new payment transaction (supports recipient and installments)
   initiatePayment = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const { 
@@ -353,7 +370,7 @@ class PaymentController {
   // Get user's transaction history
   getTransactionHistory = asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const user = req.user as IUser;
-    const { page = 1, limit = 10, status, paymentMethod } = req.query;
+    const { page = 1, limit = 10, status, paymentMethod, sort = 'createdAt', direction = 'desc' } = req.query;
 
     const pageNumber = parseInt(page as string);
     const limitNumber = parseInt(limit as string);
@@ -370,10 +387,14 @@ class PaymentController {
       query.paymentMethod = paymentMethod;
     }
 
-    // Get transactions with pagination
+    // Safe sortable fields
+    const allowedSort = new Set(['createdAt','amount','status','paymentMethod']);
+    const sortField = allowedSort.has(String(sort)) ? String(sort) : 'createdAt';
+    const sortDir = String(direction).toLowerCase() === 'asc' ? 1 : -1;
+
     const [transactions, total] = await Promise.all([
       Transaction.find(query)
-        .sort({ createdAt: -1 })
+        .sort({ [sortField]: sortDir })
         .skip(skip)
         .limit(limitNumber),
       Transaction.countDocuments(query)
@@ -388,7 +409,9 @@ class PaymentController {
           limit: limitNumber,
           total,
           pages: Math.ceil(total / limitNumber)
-        }
+        },
+        sort: sortField,
+        direction: sortDir === 1 ? 'asc' : 'desc'
       }
     };
 
