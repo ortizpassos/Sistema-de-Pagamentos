@@ -53,13 +53,6 @@ export const env = {
   },
 
   logLevel: process.env.LOG_LEVEL || 'info'
-  ,
-  externalCardValidation: {
-    url: process.env.EXTERNAL_CARD_VALIDATION_URL || '',
-    apiKey: process.env.EXTERNAL_CARD_VALIDATION_API_KEY || '',
-    timeoutMs: toNumber(process.env.EXTERNAL_CARD_VALIDATION_TIMEOUT_MS, 4000),
-    provider: process.env.EXTERNAL_CARD_VALIDATION_PROVIDER || 'external-validator'
-  }
 };
 
 // Minimal runtime validations
@@ -68,8 +61,4 @@ if (!env.mongoUri) {
 }
 if (!env.encryptionKey || env.encryptionKey.length !== 32) {
   console.warn('[WARN] ENCRYPTION_KEY must be exactly 32 characters. Current length:', env.encryptionKey.length);
-}
-
-if (!env.externalCardValidation.url) {
-  console.warn('[WARN] EXTERNAL_CARD_VALIDATION_URL not set. Card validation will be skipped.');
 }

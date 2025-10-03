@@ -6,8 +6,7 @@
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-  "test": "ng test",
-  "mock:card": "node backend/mock-card-validation.js"
+    "test": "ng test"
   },
   "prettier": {
     "printWidth": 100,
