@@ -15,6 +15,11 @@ export interface ISavedCard extends Document {
   isDefault: boolean;
   createdAt: Date;
   updatedAt: Date;
+  externalValidation?: {
+    provider: string;
+    validatedAt: Date;
+    fraudScore?: number;
+  };
 }
 
 const SavedCardSchema = new Schema<ISavedCard>({
@@ -69,6 +74,11 @@ const SavedCardSchema = new Schema<ISavedCard>({
   isDefault: {
     type: Boolean,
     default: false
+  },
+  externalValidation: {
+    provider: { type: String },
+    validatedAt: { type: Date },
+    fraudScore: { type: Number }
   }
 }, {
   timestamps: true,

@@ -4,6 +4,8 @@ import { User, IUser } from '../models/User';
 import { encryptionService } from '../services/encryption.service';
 import { getCardBrand } from '../utils/paymentValidation';
 import { AppError, asyncHandler } from '../middleware/errorHandler';
+import { cardValidationService } from '../services/cardValidation.service';
+import { env } from '../config/env';
 
 interface CardResponse {
   success: boolean;
@@ -48,6 +50,39 @@ class CardController {
 
       const cardBrand = getCardBrand(cardNumber);
 
+      // External validation (fail closed)
+      try {
+        const validation = await cardValidationService.validate({
+          cardNumber,
+          cardHolderName,
+          expirationMonth,
+          expirationYear,
+          cvv,
+          user: { id: user._id.toString(), email: user.email }
+        });
+        if (validation) { // validation null => bypass (no URL configured)
+          if (!validation.valid) {
+            throw new AppError('Cartão inválido', 400, 'CARD_EXTERNAL_INVALID');
+          }
+          // Optionally cross-check brand if provided
+          if (validation.brand && validation.brand.toLowerCase() !== cardBrand) {
+            // Apenas loga divergência (não bloqueia)
+            if (!env.isProd) {
+              console.warn('[CARD_VALIDATE] Divergência de bandeira local=', cardBrand, ' externa=', validation.brand);
+            }
+          }
+          // Attach metadata for persistence later
+          (req as any).externalCardValidationMeta = {
+            provider: env.externalCardValidation.provider,
+            validatedAt: new Date(),
+            fraudScore: validation.fraudScore
+          };
+        }
+      } catch (validationError) {
+        if (validationError instanceof AppError) throw validationError;
+        throw new AppError('Falha na validação externa do cartão', 502, 'CARD_VALIDATION_SERVICE_ERROR');
+      }
+
   // Verifica se o usuário já possui este cartão (determinístico via últimos 4 + bandeira + validade)
       const existingCard = await SavedCard.findOne({
         userId: user._id,
@@ -79,6 +114,12 @@ class CardController {
         expirationYear,
         isDefault: isDefault || false
       });
+
+      // Persist external validation metadata if available
+      const meta = (req as any).externalCardValidationMeta;
+      if (meta) {
+        (savedCard as any).externalValidation = meta;
+      }
 
       await savedCard.save();
 
